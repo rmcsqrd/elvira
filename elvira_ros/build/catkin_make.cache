@@ -1,0 +1,2 @@
+ddynamic_reconfigure:realsense-ros/realsense2_camera:realsense-ros/realsense2_description
+-DCATKIN_DEVEL_PREFIX=/home/elvira/programming/elvira/elvira_ros/devel -DCMAKE_INSTALL_PREFIX=/home/elvira/programming/elvira/elvira_ros/install -G Unix Makefiles
