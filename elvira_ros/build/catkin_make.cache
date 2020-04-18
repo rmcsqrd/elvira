@@ -1,2 +1,0 @@
-circledraw:ddynamic_reconfigure:image_common/camera_calibration_parsers:image_common/camera_info_manager:image_common/image_common:image_common/image_transport:image_common/polled_camera:realsense-ros/realsense2_camera:realsense-ros/realsense2_description
--DCATKIN_DEVEL_PREFIX=/home/elvira/programming/elvira/elvira_ros/devel -DCMAKE_INSTALL_PREFIX=/home/elvira/programming/elvira/elvira_ros/install -G Unix Makefiles

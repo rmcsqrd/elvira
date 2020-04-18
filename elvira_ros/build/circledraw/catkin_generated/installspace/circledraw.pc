@@ -1,8 +1,0 @@
-prefix=/home/elvira/programming/elvira/elvira_ros/install
-
-Name: circledraw
-Description: Description of circledraw
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 
