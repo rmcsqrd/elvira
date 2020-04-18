@@ -209,6 +209,6 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-add_executable(blob_detect src/blob_detect.cpp)
+add_executable(blob_detect src/main.cpp)
 target_link_libraries(blob_detect ${catkin_LIBRARIES} ${OpenCV_LIBS} ${console_bridge_LIBS})
 
