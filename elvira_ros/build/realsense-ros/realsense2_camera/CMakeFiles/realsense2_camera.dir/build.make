@@ -149,7 +149,7 @@ realsense2_camera_EXTERNAL_OBJECTS =
 /home/elvira/programming/elvira/elvira_ros/devel/lib/librealsense2_camera.so: /usr/lib/aarch64-linux-gnu/libopencv_core.so.3.2.0
 /home/elvira/programming/elvira/elvira_ros/devel/lib/librealsense2_camera.so: /usr/lib/aarch64-linux-gnu/libopencv_imgproc.so.3.2.0
 /home/elvira/programming/elvira/elvira_ros/devel/lib/librealsense2_camera.so: /usr/lib/aarch64-linux-gnu/libopencv_imgcodecs.so.3.2.0
-/home/elvira/programming/elvira/elvira_ros/devel/lib/librealsense2_camera.so: /opt/ros/melodic/lib/libimage_transport.so
+/home/elvira/programming/elvira/elvira_ros/devel/lib/librealsense2_camera.so: /home/elvira/programming/elvira/elvira_ros/devel/lib/libimage_transport.so
 /home/elvira/programming/elvira/elvira_ros/devel/lib/librealsense2_camera.so: /opt/ros/melodic/lib/libclass_loader.so
 /home/elvira/programming/elvira/elvira_ros/devel/lib/librealsense2_camera.so: /usr/lib/libPocoFoundation.so
 /home/elvira/programming/elvira/elvira_ros/devel/lib/librealsense2_camera.so: /usr/lib/aarch64-linux-gnu/libdl.so

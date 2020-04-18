@@ -22,6 +22,7 @@ set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "/home/elvira/programming/elvira/elvira_ros/devel/include"
   "/home/elvira/programming/elvira/elvira_ros/src/realsense-ros/realsense2_camera/include"
   "/opt/ros/melodic/include"
+  "/home/elvira/programming/elvira/elvira_ros/src/image_common/image_transport/include"
   "/home/elvira/programming/elvira/elvira_ros/src/ddynamic_reconfigure/include"
   "/opt/ros/melodic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp"
   "/usr/include/opencv"
@@ -29,6 +30,7 @@ set(CMAKE_CXX_TARGET_INCLUDE_PATH
 
 # Targets to which this target links.
 set(CMAKE_TARGET_LINKED_INFO_FILES
+  "/home/elvira/programming/elvira/elvira_ros/build/image_common/image_transport/CMakeFiles/image_transport.dir/DependInfo.cmake"
   "/home/elvira/programming/elvira/elvira_ros/build/ddynamic_reconfigure/CMakeFiles/ddynamic_reconfigure.dir/DependInfo.cmake"
   )
 

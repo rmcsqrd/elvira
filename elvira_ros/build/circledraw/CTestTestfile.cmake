@@ -1,0 +1,6 @@
+# CMake generated Testfile for 
+# Source directory: /home/elvira/programming/elvira/elvira_ros/src/circledraw
+# Build directory: /home/elvira/programming/elvira/elvira_ros/build/circledraw
+# 
+# This file includes the relevant testing commands required for 
+# testing this directory and lists subdirectories to be tested as well.
