@@ -7,6 +7,9 @@
 #include "multi_blob.hpp"
 #include <cmath>
 #include <list>
+#include <string>
+#include <iostream>
+#include <ros/console.h>
 
 
 class blob{
@@ -22,6 +25,7 @@ class blob{
         }
 
         void check_blob(int, int);        
+        void draw_circle(cv_bridge::CvImagePtr&);
         int * return_params();  // returns pointers to params
 
     private:
@@ -35,7 +39,7 @@ class blob{
         int jcm;  // j centroid
         int rad;  // radius
 
-        int threshold = 100;
+        int threshold = 10;
 };
 
 void blob::update(int jp, int ip){
@@ -57,12 +61,21 @@ void blob::check_blob(int jp, int ip){
     }
 }
 
+void blob::draw_circle(cv_bridge::CvImagePtr& cv_ptr){
+    cv::circle(cv_ptr->image, cv::Point(jcm,icm), rad, CV_RGB(0, 255, 0));
+    ROS_DEBUG_STREAM(N);
+}
+
 
 void multi_blob_track(cv_bridge::CvImagePtr&  cv_ptr){
-    cv::circle(cv_ptr->image, cv::Point(50,50), 10, CV_RGB(255, 0, 0));
 
+// enable debugging messages
+if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) { // Change the level to fit your needs
+   ros::console::notifyLoggerLevelsChanged();
+}
     // initialize empty list to store blob objects
     std::list<blob*> blobs = {};
+    typedef std::list<blob*>::iterator blobsit;
 
     // loop through pixels
     for(int j=0; j<cv_ptr->image.rows; j++){
@@ -70,14 +83,14 @@ void multi_blob_track(cv_bridge::CvImagePtr&  cv_ptr){
             cv::Vec3b & intensity = cv_ptr->image.at<cv::Vec3b>(j,i);
             
             // check if pixel satisfies condition
-            if(intensity.val[2] > 200 && intensity.val[0] < 150 && intensity.val[1] < 150){
-                
+            //if(intensity.val[2] > 200 && intensity.val[0] < 150 && intensity.val[1] < 150){
+            if(intensity.val[2] > 200){
+                intensity.val[1] = 255; 
             // assign pixels to blob
                 if(blobs.size() == 0){
                     blob* temp_blob = new blob (j,i);
                     blobs.push_back(temp_blob);  // new is c++ equiv of calloc
                 }else{
-                    typedef std::list<blob*>::iterator blobsit;
                     for(blobsit k = blobs.begin(); k !=  blobs.end(); ++k){
                         (*k)->check_blob(j, i);
                     }
@@ -85,5 +98,10 @@ void multi_blob_track(cv_bridge::CvImagePtr&  cv_ptr){
             }
         }
     }
+
+    for(blobsit k = blobs.begin(); k != blobs.end(); ++k){
+        (*k)->draw_circle(cv_ptr);
+    }
 }
+
 
