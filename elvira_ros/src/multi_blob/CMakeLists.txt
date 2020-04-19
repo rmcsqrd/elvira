@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(blob_detect)
+project(multi_blob)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -209,6 +209,6 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-add_executable(blob_detect src/main.cpp src/blob_detect.cpp)
-target_link_libraries(blob_detect ${catkin_LIBRARIES} ${OpenCV_LIBS} ${console_bridge_LIBS})
+add_executable(multi_blob src/main.cpp src/multi_blob.cpp)
+target_link_libraries(multi_blob ${catkin_LIBRARIES} ${OpenCV_LIBS} ${console_bridge_LIBS})
 

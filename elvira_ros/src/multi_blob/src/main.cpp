@@ -6,7 +6,7 @@
 #include <sensor_msgs/image_encodings.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include "blob_detect.hpp"
+#include "multi_blob.hpp"
 
 static const std::string OPENCV_WINDOW = "Image window";
 

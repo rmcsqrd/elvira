@@ -6,7 +6,7 @@
 #include <sensor_msgs/image_encodings.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include "blob_detect.hpp"
+#include "multi_blob.hpp"
 
 void color_change(cv_bridge::CvImagePtr&  cv_ptr){
     // cycle through pixles and turn anything above a certain value of red into green
