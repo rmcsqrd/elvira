@@ -8,17 +8,20 @@
 #include <opencv2/highgui/highgui.hpp>
 #include "multi_blob.hpp"
 
-void color_change(cv_bridge::CvImagePtr&  cv_ptr){
-    // cycle through pixles and turn anything above a certain value of red into green
-    for(int j=0; j<cv_ptr->image.rows; j++){
-    	for(int i=0; i<cv_ptr->image.cols; i++){
-         cv::Vec3b & intensity = cv_ptr->image.at<cv::Vec3b>(j, i);  // '&' passes by reference as a pro-gamer move
-         if(intensity.val[2] > 200 && intensity.val[0] < 150 && intensity.val[1] < 150){
-             intensity.val[0] = 0;  // B
-             intensity.val[1] = 255;  // G
-             intensity.val[2] = 0;  // R
-            }
-        }
-    }
+void multi_blob_track(cv_bridge::CvImagePtr&  cv_ptr){
+    
+}
+
+class blob{
+    int cent_i, cent_j, rad;
+    
+    public:
+        void update_centroid(int, int);
+        void update_radius(int);
+        int * return_params();  // returns pointers to params
+}
+
+void blob::update_centroid(cent_i, cent_j){
+
 }
 

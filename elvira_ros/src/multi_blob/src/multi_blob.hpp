@@ -1,2 +1,2 @@
 // function prototypes for blob_detect.cpp
-void color_change(cv_bridge::CvImagePtr&);
+void multi_blob_track(cv_bridge::CvImagePtr&);

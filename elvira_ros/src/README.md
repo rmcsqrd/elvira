@@ -7,8 +7,11 @@ There are several nodes in this catkin workspace, only edit the ones in the "edi
 - __circledraw__  
 This node is really more of a "hello world" program to verify that opencv is working.
 
-- __blob_detect__
-This node is the primary node that I'm doing Elvira's image detection with.
+- __blob_detect__  
+This node can filter based on pixel color. Any pixels that pass the threshold are turned green. This is mostly used to demonstrate how to edit individual pixels and create a header file.
+
+- __multip_blob__  
+This node characterizes certain color types and groups them into blobs. 
 
 ### "Don't Touch" Nodes
 

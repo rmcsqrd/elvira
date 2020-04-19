@@ -49,7 +49,7 @@ public:
     }
 
     // Do custom image processing pipelines
-    color_change(cv_ptr);
+    multi_blob_track(cv_ptr);
 
     // Update GUI Window
     cv::imshow(OPENCV_WINDOW, cv_ptr->image);
