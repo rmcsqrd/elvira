@@ -11,7 +11,6 @@
 #include <iostream>
 #include <ros/console.h>
 
-
 class blob{
 // blob class that stores blob centroid/radius information    
     public:
@@ -24,9 +23,8 @@ class blob{
             jcm = j;
         }
 
-        void check_blob(int, int);        
+        int check_blob(int, int);        
         void draw_circle(cv_bridge::CvImagePtr&);
-        int * return_params();  // returns pointers to params
 
     private:
         void update(int, int);
@@ -39,7 +37,7 @@ class blob{
         int jcm;  // j centroid
         int rad;  // radius
 
-        int threshold = 10;
+        int threshold = 100;
 };
 
 void blob::update(int jp, int ip){
@@ -54,16 +52,18 @@ void blob::update(int jp, int ip){
     rad = sqrt(N/3.1415);  // N can be interpreted as area of circle
 }
 
-void blob::check_blob(int jp, int ip){
+int  blob::check_blob(int jp, int ip){
     int dist = sqrt(pow(j-jcm, 2.0)+pow(i-icm, 2.0));
-    if(dist < threshold){
+    if(dist > threshold){
         update(jp, ip);
-    }
+        return 1;  // return 1 if updated
+    }else{
+        return 0;
+    } 
 }
 
 void blob::draw_circle(cv_bridge::CvImagePtr& cv_ptr){
-    cv::circle(cv_ptr->image, cv::Point(jcm,icm), rad, CV_RGB(0, 255, 0));
-    ROS_DEBUG_STREAM(N);
+    cv::circle(cv_ptr->image, cv::Point(icm,jcm), 10, CV_RGB(0, 255, 0));
 }
 
 
@@ -85,19 +85,25 @@ if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels
             // check if pixel satisfies condition
             //if(intensity.val[2] > 200 && intensity.val[0] < 150 && intensity.val[1] < 150){
             if(intensity.val[2] > 200){
-                intensity.val[1] = 255; 
+                intensity.val[1] = 255;  // turn yellow to visually debug
             // assign pixels to blob
                 if(blobs.size() == 0){
                     blob* temp_blob = new blob (j,i);
                     blobs.push_back(temp_blob);  // new is c++ equiv of calloc
                 }else{
                     for(blobsit k = blobs.begin(); k !=  blobs.end(); ++k){
-                        (*k)->check_blob(j, i);
+                        int blobadd = (*k)->check_blob(j, i);
+                        if(blobadd == 0){ 
+                            blob* temp_blob = new blob (j,i);
+                            blobs.push_back(temp_blob);  // new is c++ equiv of calloc
+                            break;
+                        }
                     }
                 } 
             }
         }
-    }
+    } 
+    //ROS_DEBUG_STREAM(blobs.size());
 
     for(blobsit k = blobs.begin(); k != blobs.end(); ++k){
         (*k)->draw_circle(cv_ptr);
