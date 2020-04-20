@@ -10,6 +10,7 @@
 #include <string>
 #include <iostream>
 #include <ros/console.h>
+#include <algorithm>
 
 class blob{
 // blob class that stores blob centroid/radius information    
@@ -25,10 +26,9 @@ class blob{
 
         int check_blob(int, int);        
         void draw_circle(cv_bridge::CvImagePtr&);
-
-    private:
         void update(int, int);
 
+    private:
         int i;  // sum of i points
         int j;  // sum of j points
         int N;  // number of points in blob
@@ -37,7 +37,6 @@ class blob{
         int jcm;  // j centroid
         int rad;  // radius
 
-        int threshold = 100;
 };
 
 void blob::update(int jp, int ip){
@@ -52,14 +51,9 @@ void blob::update(int jp, int ip){
     rad = sqrt(N/3.1415);  // N can be interpreted as area of circle
 }
 
-int  blob::check_blob(int jp, int ip){
+int blob::check_blob(int jp, int ip){
     int dist = sqrt(pow(j-jcm, 2.0)+pow(i-icm, 2.0));
-    if(dist > threshold){
-        update(jp, ip);
-        return 1;  // return 1 if updated
-    }else{
-        return 0;
-    } 
+    return dist;
 }
 
 void blob::draw_circle(cv_bridge::CvImagePtr& cv_ptr){
@@ -91,13 +85,30 @@ if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels
                     blob* temp_blob = new blob (j,i);
                     blobs.push_back(temp_blob);  // new is c++ equiv of calloc
                 }else{
+                    // loop through blob list and compute minimum blob dist
+                    int blobdist [blobs.size()];
+                    blobsit blob_id [blobs.size()];
+
+                    int cnt = 0;
                     for(blobsit k = blobs.begin(); k !=  blobs.end(); ++k){
-                        int blobadd = (*k)->check_blob(j, i);
-                        if(blobadd == 0){ 
-                            blob* temp_blob = new blob (j,i);
-                            blobs.push_back(temp_blob);  // new is c++ equiv of calloc
-                            break;
+                        int dist = (*k)->check_blob(j, i);
+                        blobdist[cnt] = dist;
+                        blob_id[cnt] = k;
+                        cnt += 1;
+                    }
+                    
+                    // loop through blobdist array to find min because I need index
+                    int mindex=0;
+                    int threshold = 100;
+                    for(int n = 0; n<blobs.size(); n++){
+                        if(blobdist[n] < blobdist[mindex]){
+                            mindex = n;
                         }
+                    }
+                    if(blobdist[mindex]<threshold){
+                        (*blob_id[mindex])->update(j,i);
+                    }else{
+                        blobs.push_back(new blob (j,i));
                     }
                 } 
             }
