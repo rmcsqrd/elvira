@@ -57,7 +57,7 @@ int blob::check_blob(int jp, int ip){
 }
 
 void blob::draw_circle(cv_bridge::CvImagePtr& cv_ptr){
-    cv::circle(cv_ptr->image, cv::Point(icm,jcm), 10, CV_RGB(0, 255, 0));
+    cv::circle(cv_ptr->image, cv::Point(icm,jcm), rad, CV_RGB(0, 255, 0));
 }
 
 
@@ -79,7 +79,7 @@ if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels
             // check if pixel satisfies condition
             //if(intensity.val[2] > 200 && intensity.val[0] < 150 && intensity.val[1] < 150){
             if(intensity.val[2] > 200){
-                intensity.val[1] = 255;  // turn yellow to visually debug
+                //intensity.val[1] = 255;  // turn yellow to visually debug
             // assign pixels to blob
                 if(blobs.size() == 0){
                     blob* temp_blob = new blob (j,i);
@@ -87,6 +87,7 @@ if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels
                 }else{
                     // loop through blob list and compute minimum blob dist
                     int blobdist [blobs.size()];
+                    ROS_DEBUG_STREAM(blobs.size());
                     blobsit blob_id [blobs.size()];
 
                     int cnt = 0;
@@ -105,15 +106,19 @@ if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels
                             mindex = n;
                         }
                     }
+                    //ROS_DEBUG_STREAM("mindex =" << mindex);
+                    //ROS_DEBUG_STREAM("j, i  =" << j <<"  " << i);
                     if(blobdist[mindex]<threshold){
                         (*blob_id[mindex])->update(j,i);
                     }else{
-                        blobs.push_back(new blob (j,i));
+                        blob* temp_blob = new blob (j,i);
+                        blobs.push_back(temp_blob);
                     }
                 } 
             }
         }
     } 
+    ROS_DEBUG_STREAM("Frame Iteration Complete");
     //ROS_DEBUG_STREAM(blobs.size());
 
     for(blobsit k = blobs.begin(); k != blobs.end(); ++k){
