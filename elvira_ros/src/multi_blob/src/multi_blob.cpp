@@ -11,6 +11,7 @@
 #include <iostream>
 #include <ros/console.h>
 #include <algorithm>
+#include <string>
 
 class blob{
 // blob class that stores blob centroid/radius information    
@@ -57,18 +58,40 @@ int blob::check_blob(int* jp, int* ip){
 }
 
 void blob::draw_circle(cv_bridge::CvImagePtr& cv_ptr){
-    cv::circle(cv_ptr->image, cv::Point(icm,jcm), rad, CV_RGB(0, 255, 0));
+    cv::circle(cv_ptr->image, cv::Point(icm,jcm), rad, CV_RGB(0, 255, 0), -1);
+    cv::drawMarker(cv_ptr->image, cv::Point(icm, jcm), CV_RGB(0, 0, 0), 0);
+    
+    // draw labels per per https://answers.opencv.org/question/27695/puttext-with-black-background/
+    int fontface = cv::FONT_HERSHEY_SIMPLEX;
+    double scale = 0.4;
+    int thickness = 1;
+    int baseline = 0;
+    std::string label = "I am a bubble";
+
+    cv::Size text = cv::getTextSize(label, fontface, scale, thickness, &baseline);
+    cv::rectangle(cv_ptr->image, cv::Point(icm-rad, jcm+rad) + cv::Point(0, baseline), cv::Point(icm-rad, jcm+rad) + cv::Point(text.width, -text.height), CV_RGB(0,0,0), cv::FILLED);
+    cv::putText(cv_ptr->image, label, cv::Point(icm-rad, jcm+rad), fontface, scale, CV_RGB(255,255,255), thickness, 8);
 }
 
 int point_check(cv_bridge::CvImagePtr& cv_ptr, int*j, int*i){
 // helper function that consolidates point to blob assignment conditional check
-    int threshold = 100;
-    int blue_max = 100;
-    int green_max = 100;
-    int red_max = 200;
-    
-    cv::Vec3b & intensity = cv_ptr->image.at<cv::Vec3b>(*j,*i);
-    if(intensity.val[2] > red_max){
+    int threshold = 200;
+
+    int blue_max = 128;
+    int green_max = 128;
+    int red_max = 255;
+
+    int blue_min = 0;
+    int green_min = 0;
+    int red_min = 128;
+     
+    cv::Vec3b & intensity = cv_ptr->image.at<cv::Vec3b>(*j,*i);  // BGR
+    if(intensity.val[0] > blue_min &&
+       intensity.val[0] < blue_max &&
+       intensity.val[1] > green_min &&
+       intensity.val[1] < green_max &&
+       intensity.val[2] > red_min &&
+       intensity.val[2] < red_max){
         return threshold;
     }else{
         return 0;
@@ -97,14 +120,11 @@ if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels
             int threshold = point_check(cv_ptr, &j, &i);  // threshold val  = add to blob, 0 = pass
             
             // check if pixel satisfies condition
-            //if(intensity.val[2] > 200 && intensity.val[0] < 150 && intensity.val[1] < 150){
             if(threshold != 0){
-                // assign pixels to blob
-                if(blobs.size() == 0){
+                if(blobs.size() == 0){   // assign pixels to blob
                     new_blob(&blobs, &j, &i);
                 }else{
-                    // iterate through blobs and compute distance to centroids
-                    std::vector<int> blob_dist;
+                    std::vector<int> blob_dist;   // iterate through blobs and compute distance to centroids
                     int dist_cnt = 0;
                     for(blobsit k = blobs.begin(); k !=  blobs.end(); ++k){
                         blob_dist.push_back((*k)->check_blob(&j, &i));
