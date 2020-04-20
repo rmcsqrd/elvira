@@ -24,9 +24,9 @@ class blob{
             jcm = j;
         }
 
-        int check_blob(int, int);        
+        int check_blob(int*, int*);        
         void draw_circle(cv_bridge::CvImagePtr&);
-        void update(int, int);
+        void update(int*, int*);
 
     private:
         int i;  // sum of i points
@@ -39,20 +39,20 @@ class blob{
 
 };
 
-void blob::update(int jp, int ip){
+void blob::update(int *jp, int *ip){
 // update blob centroid based on points new i, j value
 // consider all points to have mass = 1 (http://hyperphysics.phy-astr.gsu.edu/hbase/cm.html)
     N += 1;
-    i += ip;
-    j += jp;
+    i += *ip;
+    j += *jp;
     
     icm = i/N;
     jcm = j/N; 
     rad = sqrt(N/3.1415);  // N can be interpreted as area of circle
 }
 
-int blob::check_blob(int jp, int ip){
-    int dist = sqrt(pow(j-jcm, 2.0)+pow(i-icm, 2.0));
+int blob::check_blob(int* jp, int* ip){
+    int dist = sqrt(pow(*jp-jcm, 2.0)+pow(*ip-icm, 2.0));
     return dist;
 }
 
@@ -60,8 +60,19 @@ void blob::draw_circle(cv_bridge::CvImagePtr& cv_ptr){
     cv::circle(cv_ptr->image, cv::Point(icm,jcm), rad, CV_RGB(0, 255, 0));
 }
 
+void new_blob(std::list<blob*> *bloblist, int* j, int* i){
+// helper function that adds blob to bloblist
+    blob* new_blob = new blob (*j, *i);
+    (*bloblist).push_back(new_blob);
+}
 
 void multi_blob_track(cv_bridge::CvImagePtr&  cv_ptr){
+
+// define parameters within scope of this function
+int threshold = 100;
+int blue_max = 100;
+int green_max = 100;
+int red_max = 200;
 
 // enable debugging messages
 if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) { // Change the level to fit your needs
@@ -78,41 +89,30 @@ if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels
             
             // check if pixel satisfies condition
             //if(intensity.val[2] > 200 && intensity.val[0] < 150 && intensity.val[1] < 150){
-            if(intensity.val[2] > 200){
+            if(intensity.val[2] > red_max){
                 //intensity.val[1] = 255;  // turn yellow to visually debug
             // assign pixels to blob
                 if(blobs.size() == 0){
-                    blob* temp_blob = new blob (j,i);
-                    blobs.push_back(temp_blob);  // new is c++ equiv of calloc
+                    new_blob(&blobs, &j, &i);
                 }else{
-                    // loop through blob list and compute minimum blob dist
-                    int blobdist [blobs.size()];
-                    ROS_DEBUG_STREAM(blobs.size());
-                    blobsit blob_id [blobs.size()];
-
-                    int cnt = 0;
+                    // iterate through blobs and compute distance to centroids
+                    std::vector<int> blob_dist;
+                    int dist_cnt = 0;
                     for(blobsit k = blobs.begin(); k !=  blobs.end(); ++k){
-                        int dist = (*k)->check_blob(j, i);
-                        blobdist[cnt] = dist;
-                        blob_id[cnt] = k;
-                        cnt += 1;
+                        blob_dist.push_back((*k)->check_blob(&j, &i));
+                        dist_cnt += 1;
                     }
-                    
-                    // loop through blobdist array to find min because I need index
-                    int mindex=0;
-                    int threshold = 100;
-                    for(int n = 0; n<blobs.size(); n++){
-                        if(blobdist[n] < blobdist[mindex]){
-                            mindex = n;
-                        }
-                    }
-                    //ROS_DEBUG_STREAM("mindex =" << mindex);
-                    //ROS_DEBUG_STREAM("j, i  =" << j <<"  " << i);
-                    if(blobdist[mindex]<threshold){
-                        (*blob_id[mindex])->update(j,i);
+
+                    // find minimum distance and compare to threshold
+                    int dist_mindex = std::min_element(blob_dist.begin(), blob_dist.end())-blob_dist.begin();
+                    int dist_min = *std::min_element(blob_dist.begin(), blob_dist.end());
+                    if(dist_min > threshold){
+                        new_blob(&blobs, &j, &i);
                     }else{
-                        blob* temp_blob = new blob (j,i);
-                        blobs.push_back(temp_blob);
+                        blobsit it = blobs.begin();
+                        advance(it, dist_mindex);
+                        (*it)->update(&j, &i);
+                        
                     }
                 } 
             }
@@ -125,5 +125,4 @@ if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels
         (*k)->draw_circle(cv_ptr);
     }
 }
-
 
