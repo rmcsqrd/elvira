@@ -60,6 +60,21 @@ void blob::draw_circle(cv_bridge::CvImagePtr& cv_ptr){
     cv::circle(cv_ptr->image, cv::Point(icm,jcm), rad, CV_RGB(0, 255, 0));
 }
 
+int point_check(cv_bridge::CvImagePtr& cv_ptr, int*j, int*i){
+// helper function that consolidates point to blob assignment conditional check
+    int threshold = 100;
+    int blue_max = 100;
+    int green_max = 100;
+    int red_max = 200;
+    
+    cv::Vec3b & intensity = cv_ptr->image.at<cv::Vec3b>(*j,*i);
+    if(intensity.val[2] > red_max){
+        return threshold;
+    }else{
+        return 0;
+    }
+}
+
 void new_blob(std::list<blob*> *bloblist, int* j, int* i){
 // helper function that adds blob to bloblist
     blob* new_blob = new blob (*j, *i);
@@ -67,12 +82,6 @@ void new_blob(std::list<blob*> *bloblist, int* j, int* i){
 }
 
 void multi_blob_track(cv_bridge::CvImagePtr&  cv_ptr){
-
-// define parameters within scope of this function
-int threshold = 100;
-int blue_max = 100;
-int green_max = 100;
-int red_max = 200;
 
 // enable debugging messages
 if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) { // Change the level to fit your needs
@@ -85,13 +94,12 @@ if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels
     // loop through pixels
     for(int j=0; j<cv_ptr->image.rows; j++){
         for(int i=0; i<cv_ptr->image.cols; i++){
-            cv::Vec3b & intensity = cv_ptr->image.at<cv::Vec3b>(j,i);
+            int threshold = point_check(cv_ptr, &j, &i);  // threshold val  = add to blob, 0 = pass
             
             // check if pixel satisfies condition
             //if(intensity.val[2] > 200 && intensity.val[0] < 150 && intensity.val[1] < 150){
-            if(intensity.val[2] > red_max){
-                //intensity.val[1] = 255;  // turn yellow to visually debug
-            // assign pixels to blob
+            if(threshold != 0){
+                // assign pixels to blob
                 if(blobs.size() == 0){
                     new_blob(&blobs, &j, &i);
                 }else{
