@@ -16,7 +16,10 @@
 class blob{
 // blob class that stores blob centroid/radius information    
     public:
-        blob(int cent_j, int cent_i){  // instantiate class with centroid/radius
+        blob(int cent_j, int cent_i, int* blob_color){  // instantiate class with centroid/radius
+            blob_blue = *(blob_color);
+            blob_green = *(blob_color+1);
+            blob_red = *(blob_color+2);
             i = cent_i;
             j = cent_j;
             rad = 1;
@@ -37,6 +40,10 @@ class blob{
         int icm;  // i centroid
         int jcm;  // j centroid
         int rad;  // radius
+        
+        int blob_blue; 
+        int blob_green;
+        int blob_red; 
 
 };
 
@@ -58,7 +65,7 @@ int blob::check_blob(int* jp, int* ip){
 }
 
 void blob::draw_circle(cv_bridge::CvImagePtr& cv_ptr){
-    cv::circle(cv_ptr->image, cv::Point(icm,jcm), rad, CV_RGB(0, 255, 0), -1);
+    cv::circle(cv_ptr->image, cv::Point(icm,jcm), rad, CV_RGB(blob_red, blob_green, blob_blue), -1);
     cv::drawMarker(cv_ptr->image, cv::Point(icm, jcm), CV_RGB(0, 0, 0), 0);
     
     // draw labels per per https://answers.opencv.org/question/27695/puttext-with-black-background/
@@ -98,9 +105,9 @@ int point_check(cv_bridge::CvImagePtr& cv_ptr, int*j, int*i){
     }
 }
 
-void new_blob(std::list<blob*> *bloblist, int* j, int* i){
+void new_blob(std::list<blob*> *bloblist, int* j, int* i, int* blob_color){
 // helper function that adds blob to bloblist
-    blob* new_blob = new blob (*j, *i);
+    blob* new_blob = new blob (*j, *i, blob_color);
     (*bloblist).push_back(new_blob);
 }
 
@@ -118,11 +125,13 @@ if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels
     for(int j=0; j<cv_ptr->image.rows; j++){
         for(int i=0; i<cv_ptr->image.cols; i++){
             int threshold = point_check(cv_ptr, &j, &i);  // threshold val  = add to blob, 0 = pass
-            
+            int green_color[3] = {0, 255, 0};
+            int * green = green_color;
             // check if pixel satisfies condition
             if(threshold != 0){
                 if(blobs.size() == 0){   // assign pixels to blob
-                    new_blob(&blobs, &j, &i);
+                    
+                    new_blob(&blobs, &j, &i, green);
                 }else{
                     std::vector<int> blob_dist;   // iterate through blobs and compute distance to centroids
                     int dist_cnt = 0;
@@ -135,7 +144,7 @@ if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels
                     int dist_mindex = std::min_element(blob_dist.begin(), blob_dist.end())-blob_dist.begin();
                     int dist_min = *std::min_element(blob_dist.begin(), blob_dist.end());
                     if(dist_min > threshold){
-                        new_blob(&blobs, &j, &i);
+                        new_blob(&blobs, &j, &i, green);
                     }else{
                         blobsit it = blobs.begin();
                         advance(it, dist_mindex);
