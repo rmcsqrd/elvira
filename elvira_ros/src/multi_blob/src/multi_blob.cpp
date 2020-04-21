@@ -84,32 +84,28 @@ void blob::draw_circle(cv_bridge::CvImagePtr& cv_ptr){
 
 int point_check(cv_bridge::CvImagePtr& cv_ptr, int*j, int*i){
 // helper function that consolidates point to blob assignment conditional check
-    int tolerance = 50;  // color tolerance from defined color
+    int tolerance = 5;  // color tolerance from defined color
 
-    int orange[3] = {11, 125, 245};  // BGR
-    int yellow[3] = {0, 207, 255};
-    int purple[3] = {223, 138, 223};
-    int red[3] = {60, 60, 229};
+    int orange = 20;
+    int yellow = 30;
+    int purple = 130;
+    int red = 0;
 
-    cv::Vec3b & intensity = cv_ptr->image.at<cv::Vec3b>(*j,*i);  // BGR
+    cv::Vec3b intensity = cv_ptr->image.at<cv::Vec3b>(*j,*i);  // BGR    
+
+    // TODO: implement your own HSV conversion for comparison
+
+
+    int H=hsv.val[0]; //hue
+    int S=hsv.val[1]; //saturation
+    int V=hsv.val[2]; //value
+
+
     // check if certain color
-    if(
-       abs(intensity.val[0] - orange[0]) < tolerance &&
-       abs(intensity.val[1] - orange[1]) < tolerance &&   
-       abs(intensity.val[2] - orange[2]) < tolerance){ return 1;}  // return 1 if orange
-    else if(
-       abs(intensity.val[0] - yellow[0]) < tolerance &&
-       abs(intensity.val[1] - yellow[1]) < tolerance &&   
-       abs(intensity.val[2] - yellow[2]) < tolerance){ return 2;}  // return 2 if yellow
-    else if(
-       abs(intensity.val[0] - purple[0]) < tolerance &&
-       abs(intensity.val[1] - purple[1]) < tolerance &&   
-       abs(intensity.val[2] - purple[2]) < tolerance){ return 3;}  // return 3 if purple
-    else if(
-       abs(intensity.val[0] - red[0]) < tolerance &&
-       abs(intensity.val[1] - red[1]) < tolerance &&   
-       abs(intensity.val[2] - red[2]) < tolerance){ return 4;}  // return 4 if red
-    
+    if(abs(H-orange) < tolerance){ return 1;}  // return 1 if orange
+    else if(abs(H-yellow) < tolerance){ return 2;}  // return 2 if yellow
+    else if(abs(H-purple) < tolerance){ return 3;}  // return 3 if purple
+    else if(abs(H-red) < tolerance){ return 4;}  // return 4 if red
     else{ return 0;}  // else return 0
 }
 
