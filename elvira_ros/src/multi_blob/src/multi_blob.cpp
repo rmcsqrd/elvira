@@ -80,35 +80,75 @@ void blob::draw_circle(cv_bridge::CvImagePtr& cv_ptr){
     cv::putText(cv_ptr->image, label, cv::Point(icm-rad, jcm+rad), fontface, scale, CV_RGB(255,255,255), thickness, 8);
 }
 
+
+
 int point_check(cv_bridge::CvImagePtr& cv_ptr, int*j, int*i){
 // helper function that consolidates point to blob assignment conditional check
-    int threshold = 200;
+    int tolerance = 50;  // color tolerance from defined color
 
-    int blue_max = 128;
-    int green_max = 128;
-    int red_max = 255;
+    int orange[3] = {11, 125, 245};  // BGR
+    int yellow[3] = {0, 207, 255};
+    int purple[3] = {223, 138, 223};
+    int red[3] = {60, 60, 229};
 
-    int blue_min = 0;
-    int green_min = 0;
-    int red_min = 128;
-     
     cv::Vec3b & intensity = cv_ptr->image.at<cv::Vec3b>(*j,*i);  // BGR
-    if(intensity.val[0] > blue_min &&
-       intensity.val[0] < blue_max &&
-       intensity.val[1] > green_min &&
-       intensity.val[1] < green_max &&
-       intensity.val[2] > red_min &&
-       intensity.val[2] < red_max){
-        return threshold;
-    }else{
-        return 0;
-    }
+    // check if certain color
+    if(
+       abs(intensity.val[0] - orange[0]) < tolerance &&
+       abs(intensity.val[1] - orange[1]) < tolerance &&   
+       abs(intensity.val[2] - orange[2]) < tolerance){ return 1;}  // return 1 if orange
+    else if(
+       abs(intensity.val[0] - yellow[0]) < tolerance &&
+       abs(intensity.val[1] - yellow[1]) < tolerance &&   
+       abs(intensity.val[2] - yellow[2]) < tolerance){ return 2;}  // return 2 if yellow
+    else if(
+       abs(intensity.val[0] - purple[0]) < tolerance &&
+       abs(intensity.val[1] - purple[1]) < tolerance &&   
+       abs(intensity.val[2] - purple[2]) < tolerance){ return 3;}  // return 3 if purple
+    else if(
+       abs(intensity.val[0] - red[0]) < tolerance &&
+       abs(intensity.val[1] - red[1]) < tolerance &&   
+       abs(intensity.val[2] - red[2]) < tolerance){ return 4;}  // return 4 if red
+    
+    else{ return 0;}  // else return 0
 }
 
 void new_blob(std::list<blob*> *bloblist, int* j, int* i, int* blob_color){
 // helper function that adds blob to bloblist
     blob* new_blob = new blob (*j, *i, blob_color);
     (*bloblist).push_back(new_blob);
+}
+
+
+void pixel_assignment(std::list<blob*> *blobs, int* j, int* i, int* color, int* threshold){
+    typedef std::list<blob*>::iterator blobsit;
+    if((*blobs).size() == 0){   // assign pixels to blob
+        new_blob(blobs, j, i, color);
+    }else{
+        std::vector<int> blob_dist;   // iterate through blobs and compute distance to centroids
+        int dist_cnt = 0;
+        for(blobsit k = (*blobs).begin(); k !=  (*blobs).end(); ++k){
+            blob_dist.push_back((*k)->check_blob(j, i));
+            dist_cnt += 1;
+        }
+        // find minimum distance and compare to threshold
+        int dist_mindex = std::min_element(blob_dist.begin(), blob_dist.end())-blob_dist.begin();
+        int dist_min = *std::min_element(blob_dist.begin(), blob_dist.end());
+        if(dist_min > *threshold){
+            new_blob(blobs, j, i, color);
+        }else{
+            blobsit it = (*blobs).begin();
+            advance(it, dist_mindex);
+            (*it)->update(j, i);
+        }
+    }
+}
+
+void drawBlobCircles(std::list<blob*> blobs, cv_bridge::CvImagePtr& cv_ptr){
+    typedef std::list<blob*>::iterator blobsit;
+    for(blobsit k = blobs.begin(); k != blobs.end(); ++k){
+        (*k)->draw_circle(cv_ptr);
+    }
 }
 
 void multi_blob_track(cv_bridge::CvImagePtr&  cv_ptr){
@@ -118,48 +158,48 @@ if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels
    ros::console::notifyLoggerLevelsChanged();
 }
     // initialize empty list to store blob objects
-    std::list<blob*> blobs = {};
-    typedef std::list<blob*>::iterator blobsit;
+    std::list<blob*> orange_blobs = {};
+    std::list<blob*> yellow_blobs= {};
+    std::list<blob*> purple_blobs = {};
+    std::list<blob*> red_blobs = {};
+    
+    int threshold = 200;  // pixel distance threshold
 
     // loop through pixels
     for(int j=0; j<cv_ptr->image.rows; j++){
         for(int i=0; i<cv_ptr->image.cols; i++){
-            int threshold = point_check(cv_ptr, &j, &i);  // threshold val  = add to blob, 0 = pass
-            int green_color[3] = {0, 255, 0};
-            int * green = green_color;
-            // check if pixel satisfies condition
-            if(threshold != 0){
-                if(blobs.size() == 0){   // assign pixels to blob
-                    
-                    new_blob(&blobs, &j, &i, green);
-                }else{
-                    std::vector<int> blob_dist;   // iterate through blobs and compute distance to centroids
-                    int dist_cnt = 0;
-                    for(blobsit k = blobs.begin(); k !=  blobs.end(); ++k){
-                        blob_dist.push_back((*k)->check_blob(&j, &i));
-                        dist_cnt += 1;
-                    }
+            
+            int color_code= point_check(cv_ptr, &j, &i);  // threshold val  = add to blob, 0 = pass
+            int orangeBGR[3] = {0, 165, 255};          
+            int yellowBGR[3] = {0, 255, 255};          
+            int purpleBGR[3] = {128, 0, 128};          
+            int redBGR[3] = {0, 0, 255};          
 
-                    // find minimum distance and compare to threshold
-                    int dist_mindex = std::min_element(blob_dist.begin(), blob_dist.end())-blob_dist.begin();
-                    int dist_min = *std::min_element(blob_dist.begin(), blob_dist.end());
-                    if(dist_min > threshold){
-                        new_blob(&blobs, &j, &i, green);
-                    }else{
-                        blobsit it = blobs.begin();
-                        advance(it, dist_mindex);
-                        (*it)->update(&j, &i);
-                        
-                    }
-                } 
+            int * orange = orangeBGR;
+            int * yellow = yellowBGR;
+            int * purple = purpleBGR;
+            int * red = redBGR;
+ 
+            // check if pixel satisfies condition
+            if(color_code != 0){
+                if(color_code == 1){
+                    pixel_assignment(&orange_blobs, &j, &i, orangeBGR, &threshold);
+                }else if(color_code == 2){
+                    pixel_assignment(&yellow_blobs, &j, &i, yellowBGR, &threshold);
+                }else if(color_code == 3){
+                    pixel_assignment(&purple_blobs, &j, &i, purpleBGR, &threshold);
+                }else if(color_code == 4){
+                    pixel_assignment(&red_blobs, &j, &i, redBGR, &threshold);
+                }
             }
         }
     } 
     ROS_DEBUG_STREAM("Frame Iteration Complete");
     //ROS_DEBUG_STREAM(blobs.size());
-
-    for(blobsit k = blobs.begin(); k != blobs.end(); ++k){
-        (*k)->draw_circle(cv_ptr);
-    }
+    
+    drawBlobCircles(orange_blobs, cv_ptr);
+    drawBlobCircles(yellow_blobs, cv_ptr);
+    drawBlobCircles(purple_blobs, cv_ptr);
+    drawBlobCircles(red_blobs, cv_ptr);
 }
 
