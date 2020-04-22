@@ -80,28 +80,63 @@ void blob::draw_circle(cv_bridge::CvImagePtr& cv_ptr){
     cv::putText(cv_ptr->image, label, cv::Point(icm-rad, jcm+rad), fontface, scale, CV_RGB(255,255,255), thickness, 8);
 }
 
+float * HSV_convert(cv::Vec3b * intensity){
+    // https://cs.stackexchange.com/questions/64549/convert-hsv-to-rgb-colors
+    float Rp = (float)(*intensity).val[2]/255;
+    float Gp = (float)(*intensity).val[1]/255;
+    float Bp = (float)(*intensity).val[0]/255;
+    float BGRp [] = {Bp, Gp, Rp};
+     
+    float Cmax = *std::max_element(BGRp, BGRp+3);
+    float Cmin = *std::min_element(BGRp, BGRp+3);
+    float delta = Cmax - Cmin;
 
+    float H;
+    float S;
+    float V;
+
+    // compute hue
+    if(delta == 0){H = 0.0;
+    }else if(Cmax == Rp){H = 60*((Gp-Bp)/delta);
+    }else if(Cmax == Gp){H = 60*(2+(Bp-Rp)/delta);
+    }else if(Cmax == Bp){H = 60*(4+(Rp-Gp)/delta);
+    }
+
+    // compute saturation
+    if(Cmax == 0){S=0;
+    }else{S = delta/Cmax;
+    }
+
+    // compute value
+    V = Cmax;
+
+    float * hsv[] = {&H, &S, &V};  
+    return * hsv;
+}
 
 int point_check(cv_bridge::CvImagePtr& cv_ptr, int*j, int*i){
 // helper function that consolidates point to blob assignment conditional check
-    int tolerance = 5;  // color tolerance from defined color
+    int tolerance = 1;  // color tolerance from defined color
 
     int orange = 20;
     int yellow = 30;
     int purple = 130;
     int red = 0;
 
-    cv::Vec3b intensity = cv_ptr->image.at<cv::Vec3b>(*j,*i);  // BGR    
+    cv::Vec3b & intensity = cv_ptr->image.at<cv::Vec3b>(*j,*i);  // BGR    
 
-    // TODO: implement your own HSV conversion for comparison
-
-
-    int H=hsv.val[0]; //hue
-    int S=hsv.val[1]; //saturation
-    int V=hsv.val[2]; //value
+    float * hsv = HSV_convert(&intensity);
 
 
-    // check if certain color
+    int H = (int)*(hsv);  //hue [0, 360]
+    float S = *(hsv+1);   //saturation [0, 1]
+    float V = *(hsv+2);   //value [0, 1]
+    
+    // plot output colors and converted colors
+    //ROS_DEBUG_STREAM("R "<< (int)intensity.val[2] << " G " << (int)intensity.val[1] << " B " << (int)intensity.val[0]);
+    //ROS_DEBUG_STREAM("H " << H << " S " << S << " V " << V);
+    
+    // check if certain color in HSV colorspace
     if(abs(H-orange) < tolerance){ return 1;}  // return 1 if orange
     else if(abs(H-yellow) < tolerance){ return 2;}  // return 2 if yellow
     else if(abs(H-purple) < tolerance){ return 3;}  // return 3 if purple
@@ -190,7 +225,7 @@ if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels
             }
         }
     } 
-    ROS_DEBUG_STREAM("Frame Iteration Complete");
+    //ROS_DEBUG_STREAM("Frame Iteration Complete");
     //ROS_DEBUG_STREAM(blobs.size());
     
     drawBlobCircles(orange_blobs, cv_ptr);
