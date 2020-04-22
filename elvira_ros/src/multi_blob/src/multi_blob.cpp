@@ -16,6 +16,7 @@
 class blob{
 // blob class that stores blob centroid/radius information    
     public:
+        int N;  // number of points in blob
         blob(int cent_j, int cent_i, int* blob_color){  // instantiate class with centroid/radius
             blob_blue = *(blob_color);
             blob_green = *(blob_color+1);
@@ -29,13 +30,12 @@ class blob{
         }
 
         int check_blob(int*, int*);        
-        void draw_circle(cv_bridge::CvImagePtr&);
+        void draw_circle(cv_bridge::CvImagePtr&, std::string*);
         void update(int*, int*);
 
     private:
         int i;  // sum of i points
         int j;  // sum of j points
-        int N;  // number of points in blob
 
         int icm;  // i centroid
         int jcm;  // j centroid
@@ -64,7 +64,7 @@ int blob::check_blob(int* jp, int* ip){
     return dist;
 }
 
-void blob::draw_circle(cv_bridge::CvImagePtr& cv_ptr){
+void blob::draw_circle(cv_bridge::CvImagePtr& cv_ptr, std::string* label){
     cv::circle(cv_ptr->image, cv::Point(icm,jcm), rad, CV_RGB(blob_red, blob_green, blob_blue), -1);
     cv::drawMarker(cv_ptr->image, cv::Point(icm, jcm), CV_RGB(0, 0, 0), 0);
     
@@ -73,11 +73,10 @@ void blob::draw_circle(cv_bridge::CvImagePtr& cv_ptr){
     double scale = 0.4;
     int thickness = 1;
     int baseline = 0;
-    std::string label = "I am a bubble";
 
-    cv::Size text = cv::getTextSize(label, fontface, scale, thickness, &baseline);
+    cv::Size text = cv::getTextSize(*label, fontface, scale, thickness, &baseline);
     cv::rectangle(cv_ptr->image, cv::Point(icm-rad, jcm+rad) + cv::Point(0, baseline), cv::Point(icm-rad, jcm+rad) + cv::Point(text.width, -text.height), CV_RGB(0,0,0), cv::FILLED);
-    cv::putText(cv_ptr->image, label, cv::Point(icm-rad, jcm+rad), fontface, scale, CV_RGB(255,255,255), thickness, 8);
+    cv::putText(cv_ptr->image, *label, cv::Point(icm-rad, jcm+rad), fontface, scale, CV_RGB(255,255,255), thickness, 8);
 }
 
 float * HSV_convert(cv::Vec3b * intensity){
@@ -118,9 +117,9 @@ int point_check(cv_bridge::CvImagePtr& cv_ptr, int*j, int*i){
 // helper function that consolidates point to blob assignment conditional check
     int tolerance = 20;  // color tolerance from defined color
 
-    int yellow = 20;
-    int orange = 30;
-    int purple = 280;  //260 - 300
+    int yellow = 20;   
+    int orange = 30;   
+    int purple = 280;  
     int red = 359;
 
     cv::Vec3b & intensity = cv_ptr->image.at<cv::Vec3b>(*j,*i);  // BGR    
@@ -143,7 +142,7 @@ int point_check(cv_bridge::CvImagePtr& cv_ptr, int*j, int*i){
     //if(S > 0.9 && V < 0.5){    
         if(abs(H-orange) < tolerance && S > 0.8){ return 1;}  // return 1 if orange
         else if(abs(H-yellow) < tolerance && S > 0.4){ return 2;}  // return 2 if yellow
-        else if(abs(H-purple) < tolerance){ return 3;}  // return 3 if purple
+        else if(abs(H-purple) < tolerance && S > 0.4 ){ return 3;}  // return 3 if purple
         else if(abs(H-red) < tolerance && S > 0.8){ return 4;}  // return 4 if red
         else{ return 0;}  // else return 0
 }
@@ -179,10 +178,12 @@ void pixel_assignment(std::list<blob*> *blobs, int* j, int* i, int* color, int* 
     }
 }
 
-void drawBlobCircles(std::list<blob*> blobs, cv_bridge::CvImagePtr& cv_ptr){
+void drawBlobCircles(std::list<blob*> blobs, cv_bridge::CvImagePtr& cv_ptr, std::string * label){
     typedef std::list<blob*>::iterator blobsit;
     for(blobsit k = blobs.begin(); k != blobs.end(); ++k){
-        (*k)->draw_circle(cv_ptr);
+        if((*k)->N > 1000){  // don't display small noisy bubbles
+            (*k)->draw_circle(cv_ptr, label);
+        }
     }
 }
 
@@ -208,7 +209,7 @@ if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels
             //int orangeBGR[3] = {0, 100, 255};          
             int orangeBGR[3] = {0, 0, 255};          
             int yellowBGR[3] = {0, 255, 255};          
-            int purpleBGR[3] = {128, 0, 128};          
+            int purpleBGR[3] = {0, 255,0 };          
             int redBGR[3] = {0, 0, 255};          
 
             int * orange = orangeBGR;
@@ -233,9 +234,12 @@ if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels
     //ROS_DEBUG_STREAM("Frame Iteration Complete");
     //ROS_DEBUG_STREAM(blobs.size());
     
-    drawBlobCircles(orange_blobs, cv_ptr);
-    drawBlobCircles(yellow_blobs, cv_ptr);
-    drawBlobCircles(purple_blobs, cv_ptr);
-    drawBlobCircles(red_blobs, cv_ptr);
+    std::string friendly = "Friendly Blob";
+    std::string foe = "Adversarial Blob";
+    
+    drawBlobCircles(orange_blobs, cv_ptr, &foe);
+    drawBlobCircles(yellow_blobs, cv_ptr, &foe);
+    drawBlobCircles(purple_blobs, cv_ptr, &friendly);
+    drawBlobCircles(red_blobs, cv_ptr, &foe);
 }
 
