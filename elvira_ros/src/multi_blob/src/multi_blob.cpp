@@ -116,7 +116,7 @@ float * HSV_convert(cv::Vec3b * intensity){
 
 int point_check(cv_bridge::CvImagePtr& cv_ptr, int*j, int*i){
 // helper function that consolidates point to blob assignment conditional check
-    int tolerance = 1;  // color tolerance from defined color
+    int tolerance = 20;  // color tolerance from defined color
 
     int orange = 20;
     int yellow = 30;
@@ -137,11 +137,18 @@ int point_check(cv_bridge::CvImagePtr& cv_ptr, int*j, int*i){
     //ROS_DEBUG_STREAM("H " << H << " S " << S << " V " << V);
     
     // check if certain color in HSV colorspace
-    if(abs(H-orange) < tolerance){ return 1;}  // return 1 if orange
-    else if(abs(H-yellow) < tolerance){ return 2;}  // return 2 if yellow
-    else if(abs(H-purple) < tolerance){ return 3;}  // return 3 if purple
-    else if(abs(H-red) < tolerance){ return 4;}  // return 4 if red
-    else{ return 0;}  // else return 0
+    // S = 1 = > pure color (S = 0 => white)
+    // V = 0 => gray, V = 1 => white
+
+    // TODO: tune the colors. these setting will track orange and red frisbee. Red is more sensitive to light, orange seems more robust
+    //if(S > 0.9 && V < 0.5){    
+    if(S > 0.9){// && V < 0.5){    
+        if(abs(H-orange) < tolerance){ return 1;}  // return 1 if orange
+        else if(abs(H-yellow) < tolerance){ return 2;}  // return 2 if yellow
+        else if(abs(H-purple) < tolerance){ return 3;}  // return 3 if purple
+        else if(abs(H-red) < tolerance){ return 4;}  // return 4 if red
+        else{ return 0;}  // else return 0
+    }
 }
 
 void new_blob(std::list<blob*> *bloblist, int* j, int* i, int* blob_color){
