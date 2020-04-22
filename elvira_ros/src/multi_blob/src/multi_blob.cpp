@@ -118,10 +118,10 @@ int point_check(cv_bridge::CvImagePtr& cv_ptr, int*j, int*i){
 // helper function that consolidates point to blob assignment conditional check
     int tolerance = 20;  // color tolerance from defined color
 
-    int orange = 20;
-    int yellow = 30;
-    int purple = 130;
-    int red = 0;
+    int yellow = 20;
+    int orange = 30;
+    int purple = 280;  //260 - 300
+    int red = 359;
 
     cv::Vec3b & intensity = cv_ptr->image.at<cv::Vec3b>(*j,*i);  // BGR    
 
@@ -140,15 +140,12 @@ int point_check(cv_bridge::CvImagePtr& cv_ptr, int*j, int*i){
     // S = 1 = > pure color (S = 0 => white)
     // V = 0 => gray, V = 1 => white
 
-    // TODO: tune the colors. these setting will track orange and red frisbee. Red is more sensitive to light, orange seems more robust
     //if(S > 0.9 && V < 0.5){    
-    if(S > 0.9){// && V < 0.5){    
-        if(abs(H-orange) < tolerance){ return 1;}  // return 1 if orange
-        else if(abs(H-yellow) < tolerance){ return 2;}  // return 2 if yellow
+        if(abs(H-orange) < tolerance && S > 0.8){ return 1;}  // return 1 if orange
+        else if(abs(H-yellow) < tolerance && S > 0.4){ return 2;}  // return 2 if yellow
         else if(abs(H-purple) < tolerance){ return 3;}  // return 3 if purple
-        else if(abs(H-red) < tolerance){ return 4;}  // return 4 if red
+        else if(abs(H-red) < tolerance && S > 0.8){ return 4;}  // return 4 if red
         else{ return 0;}  // else return 0
-    }
 }
 
 void new_blob(std::list<blob*> *bloblist, int* j, int* i, int* blob_color){
@@ -208,7 +205,8 @@ if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels
         for(int i=0; i<cv_ptr->image.cols; i++){
             
             int color_code= point_check(cv_ptr, &j, &i);  // threshold val  = add to blob, 0 = pass
-            int orangeBGR[3] = {0, 165, 255};          
+            //int orangeBGR[3] = {0, 100, 255};          
+            int orangeBGR[3] = {0, 0, 255};          
             int yellowBGR[3] = {0, 255, 255};          
             int purpleBGR[3] = {128, 0, 128};          
             int redBGR[3] = {0, 0, 255};          
@@ -222,12 +220,12 @@ if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels
             if(color_code != 0){
                 if(color_code == 1){
                     pixel_assignment(&orange_blobs, &j, &i, orangeBGR, &threshold);
-                }else if(color_code == 2){
-                    pixel_assignment(&yellow_blobs, &j, &i, yellowBGR, &threshold);
+                //}else if(color_code == 2){
+                //    pixel_assignment(&yellow_blobs, &j, &i, yellowBGR, &threshold);
                 }else if(color_code == 3){
                     pixel_assignment(&purple_blobs, &j, &i, purpleBGR, &threshold);
-                }else if(color_code == 4){
-                    pixel_assignment(&red_blobs, &j, &i, redBGR, &threshold);
+                //}else if(color_code == 4){
+                //    pixel_assignment(&red_blobs, &j, &i, redBGR, &threshold);
                 }
             }
         }
