@@ -45,7 +45,6 @@ void PWMGen(uint8_t driverAddress, uint8_t motorID, uint8_t positionDeg){
 
   for(int cnt = 0; cnt < 4; cnt++){
     i2c_write_wrapper(0x40, pin[cnt], value[cnt]);
-    usleep(50*1e3);
   }
 }
 

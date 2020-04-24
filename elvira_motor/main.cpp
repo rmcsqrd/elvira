@@ -65,20 +65,14 @@ int main(){
 
 // setup functions
 void setup() {
-  stanceReset();
+  //stanceReset();
+  delay(delayt);
+  delay(delayt);
   delay(delayt);
 
   sayHello(2);
   delay(delayt);
-//  aroundTown();
-  delay(delayt);  
-  
-
-//  walk(3);  
-  stanceReset();
-  delay(2*delayt);
-  gettall();
-    getshort();
+  sayHello(3);
 }
 
 // movement functions
