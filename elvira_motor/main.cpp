@@ -66,64 +66,67 @@ int main(){
 // setup functions
 void setup() {
   //stanceReset();
-  delay(delayt);
-  delay(delayt);
-  delay(delayt);
-
-  sayHello(2);
-  delay(delayt);
-  sayHello(3);
+    delay(delayt);
+    sayHello(2);
+    delay(delayt);
+    leg1.articulate(0,0);
+    leg2.articulate(180, 180);
+    leg4.articulate(0,0);
+    leg3.articulate(180, 180);
+    delay(delayt);
+    stanceReset();
 }
 
 // movement functions
 void stanceReset(){
-  leg1.straighten();
-  leg2.straighten();
-  leg3.straighten();
-  leg4.straighten();
-  gettall();
-  leg1.sweep(180);
-  leg2.sweep(0);
-  leg3.sweep(180);
-  leg4.sweep(0);
+    leg1.straighten();
+    leg2.straighten();
+    leg3.straighten();
+    leg4.straighten();
+    gettall();
+    leg1.sweep(180);
+    leg2.sweep(0);
+    leg3.sweep(180);
+    leg4.sweep(0);
 }
 
 void gettall(){
-  leg1.articulate(180,180);
-  leg2.articulate(0,0);
-  leg4.articulate(180,180);
-  leg3.articulate(0,0);
-}
-
-void getmiddle(){
-  leg1.articulate(90,90);
-  leg2.articulate(90,90);
-  leg4.articulate(90,90);
-  leg3.articulate(90,90);
-}
-
-void sayHello(uint8_t n){
-  stanceReset();
-  int pushupTime = 200;
-  for(int i =0; i<n;i++){
-    leg1.articulate(180,0);
-    leg2.articulate(0,180);
-    leg4.articulate(180,0);
-    leg3.articulate(0,180);
-    delay(pushupTime);
     leg1.articulate(180,180);
     leg2.articulate(0,0);
     leg4.articulate(180,180);
     leg3.articulate(0,0);
+}
+
+void getmiddle(){
+    leg1.articulate(90,90);
+    leg2.articulate(90,90);
+    leg4.articulate(90,90);
+    leg3.articulate(90,90);
+}
+
+void sayHello(uint8_t n){
+    int pushupTime = 200;
+    //stanceReset();
     delay(pushupTime);
-  }
+    for(int i =0; i<n;i++){
+        leg1.articulate(180,0);
+        leg2.articulate(0,180);
+        leg4.articulate(180,0);
+        leg3.articulate(0,180);
+        delay(pushupTime);
+        leg1.articulate(180,180);
+        leg2.articulate(0,0);
+        leg4.articulate(180,180);
+        leg3.articulate(0,0);
+        delay(pushupTime);
+    }
 }
 
 void getshort(){
-  leg1.articulate(0,0);
-  leg2.articulate(180,180);
-  leg4.articulate(0,0);
-  leg3.articulate(180,180);
+    leg1.articulate(0,0);
+    leg2.articulate(180,180);
+    leg4.articulate(0,0);
+    leg3.articulate(180,180);
 }
 
 // utility functions
