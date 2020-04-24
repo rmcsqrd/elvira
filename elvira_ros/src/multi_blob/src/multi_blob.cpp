@@ -13,6 +13,36 @@
 #include <algorithm>
 #include <string>
 
+/*
+ELVIRA MULTI-BLOB NODE
+INPUT: pointer to image from realsense node
+RETURN: nothing, just updates the image from the realsense node
+
+SUMMARY: This node loops through all pixels in an image frame to:
+- check if the pixel meets a color threshold (tolerance/colors in point_check())
+- if it passes the threshold, the pixel is either assigned to an existing cluster or is the
+  start of a new one. This threshold is distance based and is set in multi_blob_track().
+  clusters are grouped by color. Color is based on the return value from point_check()
+- clusters are then drawn by looping through lists of cluster color groups.
+
+CLASS DESCRIPTION:
+blob(): individual cluster of pixels. Belongs to list of clusters grouped by color.
+    blob.check_blob(): returns distance between blob centroid and pixel
+    blob.draw_circle(): draws a circle based on blob radius and centroid.
+    blob.updat(): update blob parameters when a new pixel is added to the blob
+
+FUNCTION DESCRIPTIONS:
+HSV_convert(): helper function that takes in RGB values and returns HSV values
+point_check(): function that evaluates if a pixel should be cluster/which blob to assign to
+new_blob(): function to instantiate new blob with a given point
+pixel_assignment(): function that iterates through existing blobs and determines minimum distance
+                    between a given pixel and all blobs. Assigns pixel to nearest blob or creates
+                    new blob if pixel doesn't pass threshold
+drawBlobCircles(): simple helper function that loops through blob lists and draws blob
+multi_blob_track(): wrapper function that loops through image and calls all the other functions
+
+*/
+
 class blob{
 // blob class that stores blob centroid/radius information    
     public:
@@ -131,20 +161,11 @@ int point_check(cv_bridge::CvImagePtr& cv_ptr, int*j, int*i){
     float S = *(hsv+1);   //saturation [0, 1]
     float V = *(hsv+2);   //value [0, 1]
     
-    // plot output colors and converted colors
-    //ROS_DEBUG_STREAM("R "<< (int)intensity.val[2] << " G " << (int)intensity.val[1] << " B " << (int)intensity.val[0]);
-    //ROS_DEBUG_STREAM("H " << H << " S " << S << " V " << V);
-    
-    // check if certain color in HSV colorspace
-    // S = 1 = > pure color (S = 0 => white)
-    // V = 0 => gray, V = 1 => white
-
-    //if(S > 0.9 && V < 0.5){    
-        if(abs(H-orange) < tolerance && S > 0.8){ return 1;}  // return 1 if orange
-        else if(abs(H-yellow) < tolerance && S > 0.4){ return 2;}  // return 2 if yellow
-        else if(abs(H-purple) < tolerance && S > 0.4 ){ return 3;}  // return 3 if purple
-        else if(abs(H-red) < tolerance && S > 0.8){ return 4;}  // return 4 if red
-        else{ return 0;}  // else return 0
+    if(abs(H-orange) < tolerance && S > 0.8){ return 1;}  // return 1 if orange
+    else if(abs(H-yellow) < tolerance && S > 0.4){ return 2;}  // return 2 if yellow
+    else if(abs(H-purple) < tolerance && S > 0.4 ){ return 3;}  // return 3 if purple
+    else if(abs(H-red) < tolerance && S > 0.8){ return 4;}  // return 4 if red
+    else{ return 0;}  // else return 0
 }
 
 void new_blob(std::list<blob*> *bloblist, int* j, int* i, int* blob_color){
@@ -231,6 +252,8 @@ if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels
             }
         }
     } 
+
+    // helpful diagnostic print statements
     //ROS_DEBUG_STREAM("Frame Iteration Complete");
     //ROS_DEBUG_STREAM(blobs.size());
     
