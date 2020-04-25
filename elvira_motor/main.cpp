@@ -56,6 +56,8 @@ void sayHello(uint8_t);
 void gettall();
 void getmiddle();
 void getshort();
+void rotateCW();
+void rotateCCW();
 
 
 int main(){
@@ -65,7 +67,7 @@ int main(){
 
 // setup functions
 void setup() {
-  //stanceReset();
+    /*// Hellow world pushups    
     delay(delayt);
     sayHello(2);
     delay(delayt);
@@ -74,7 +76,16 @@ void setup() {
     leg4.articulate(0,0);
     leg3.articulate(180, 180);
     delay(delayt);
+    stanceReset();*/
     stanceReset();
+    delay(delayt);
+
+    rotateCW();
+    delay(delayt);
+    rotateCCW();
+    rotateCCW();
+
+    
 }
 
 // movement functions
@@ -106,7 +117,6 @@ void getmiddle(){
 
 void sayHello(uint8_t n){
     int pushupTime = 200;
-    //stanceReset();
     delay(pushupTime);
     for(int i =0; i<n;i++){
         leg1.articulate(180,0);
@@ -129,7 +139,72 @@ void getshort(){
     leg3.articulate(180,180);
 }
 
+void rotateCCW(){
+
+    leg4.articulate(180,180);
+    leg1.articulate(0, 0);
+    delay(100);
+    leg1.sweep(0);
+    leg4.sweep(180);
+    delay(100);
+    leg4.articulate(0, 0);
+    leg1.articulate(180,180);
+    delay(100);
+    
+    leg2.sweep(180);
+    leg3.sweep(0);
+    leg1.articulate(180,0);
+    leg4.articulate(180,180);
+    delay(100);
+
+    leg2.articulate(180, 180);
+    leg2.sweep(0);
+    leg3.articulate(0,0);
+    leg3.sweep(180);
+    delay(100);
+    leg2.articulate(90,90);
+    leg3.articulate(90,90);
+    leg1.sweep(180);
+    leg4.sweep(0);
+    delay(100);
+    stanceReset();
+}
+
+void rotateCW(){
+
+    leg2.articulate(180,180);
+    leg3.articulate(0, 0);
+    delay(100);
+    leg3.sweep(0);
+    leg2.sweep(180);
+    delay(100);
+    leg2.articulate(0, 0);
+    leg3.articulate(180,180);
+    delay(100);
+    
+    leg4.sweep(180);
+    leg1.sweep(0);
+    leg3.articulate(0,0);
+    leg2.articulate(180,180);
+    delay(100);
+    leg2.articulate(180,180);  // this here because movement issues
+    leg4.articulate(180, 180);
+    delay(50);
+    leg4.sweep(0);
+    leg1.articulate(0,0);
+    leg1.sweep(180);
+    delay(100);
+    leg2.articulate(0,0);
+    leg4.articulate(90,90);
+    leg1.articulate(90,90);
+    leg3.sweep(180);
+    leg2.sweep(0);
+    delay(100);
+    stanceReset();
+}
+
 // utility functions
 void delay(uint16_t time){
     usleep(time * 1e3);
 }
+

@@ -3,6 +3,8 @@
 There are several nodes in this catkin workspace, only edit the ones in the "editable" list (or stuff will break).
 
 ### Editable Nodes
+- __motor_driver__
+This node handles all the motor driver code on Elvira
 
 - __circledraw__  
 This node is really more of a "hello world" program to verify that opencv is working.
