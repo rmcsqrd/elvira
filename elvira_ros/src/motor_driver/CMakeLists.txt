@@ -203,3 +203,7 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+add_executable(listener src/listener.cpp src/motion_wrapper.cpp src/lib/i2c.c src/lib/motor_driver.cpp)
+# add_executable(multi_blob src/main.cpp src/multi_blob.cpp)
+target_link_libraries(listener ${catkin_LIBRARIES})

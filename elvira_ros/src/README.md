@@ -6,11 +6,8 @@ There are several nodes in this catkin workspace, only edit the ones in the "edi
 - __motor_driver__
 This node handles all the motor driver code on Elvira
 
-- __circledraw__  
-This node is really more of a "hello world" program to verify that opencv is working.
-
-- __blob_detect__  
-This node can filter based on pixel color. Any pixels that pass the threshold are turned green. This is mostly used to demonstrate how to edit individual pixels and create a header file.
+- __julia_ros__
+This node handles the motion planning. It takes in image data as the state space and sends actions to the motor driver
 
 - __multip_blob__  
 This node characterizes certain color types and groups them into blobs. 

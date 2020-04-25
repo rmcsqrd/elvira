@@ -1,4 +1,4 @@
-#include "motor_driver.h"
+#include "lib/motor_driver.h"
 #include <stdint.h>
 #include <unistd.h>
 #include "math.h"
@@ -59,34 +59,6 @@ void getshort();
 void rotateCW();
 void rotateCCW();
 
-
-int main(){
-    setup();    
-    return 0;
-}
-
-// setup functions
-void setup() {
-    /*// Hellow world pushups    
-    delay(delayt);
-    sayHello(2);
-    delay(delayt);
-    leg1.articulate(0,0);
-    leg2.articulate(180, 180);
-    leg4.articulate(0,0);
-    leg3.articulate(180, 180);
-    delay(delayt);
-    stanceReset();*/
-    stanceReset();
-    delay(delayt);
-
-    rotateCW();
-    delay(delayt);
-    rotateCCW();
-    rotateCCW();
-
-    
-}
 
 // movement functions
 void stanceReset(){
