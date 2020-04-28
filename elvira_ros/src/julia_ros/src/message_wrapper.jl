@@ -15,20 +15,16 @@ import .std_msgs.msg.StringMsg
 import .std_msgs.msg.Int32MultiArray
 
 # multi_blob subscribe/publish
-function callback(msg::Int32MultiArray, motor_pub_obj::Publisher{StringMsg})#, visual_pub_obj::Publisher{Int32MultiArray})
+function callback(msg::Int32MultiArray, pub_obj::Publisher{StringMsg})
 
     # unpack and convert data to an array
     blobVect = msg.data  
     num_blobs = convert(Int, size(blobVect)[1]/5)
     blobArray = transpose(reshape(blobVect, :, num_blobs))
-    
-    # call the juliaBrain.jl wrapper function and return a command in the form of a string
-    
-    text = StringMsg("raw_string")
-    publish(motor_pub_obj, text)
-    #publish(visual_pub_obj, msg.data)
-
-    rosinfo("got here")
+    logwarn(blobArray)
+    #raw_string = 
+    text = StringMsg("pushup")
+    publish(pub_obj, text)
 end
 
 # node loop function 
@@ -40,11 +36,9 @@ function loop()
 end
 
 function main()
-    init_node("julia_brain")
-    motor_pub = Publisher{StringMsg}("/julia_brain/motor_control", queue_size=10)
-    #visual_pub = Publisher{Int32MultiArray}("/julia_brain/visual_output", queue_size=10)
-    #sub = Subscriber{Int32MultiArray}("/multi_blob/blob_data", callback, (motor_pub, visual_pub, ), queue_size=10)
-    sub = Subscriber{Int32MultiArray}("/multi_blob/blob_data", callback, (motor_pub, ), queue_size=10)
+    init_node("julia_node")
+    pub = Publisher{StringMsg}("motor_control", queue_size=10);
+    sub = Subscriber{Int32MultiArray}("/multi_blob/blob_data", callback, (pub,), queue_size=10)
     loop()
 end
 
