@@ -8,16 +8,19 @@
 #include <opencv2/highgui/highgui.hpp>
 #include "multi_blob.hpp"
 #include "std_msgs/Int32MultiArray.h"
-static const std::string OPENCV_WINDOW = "Image window";
+static const std::string OPENCV_WINDOW = "Elvira Vision";
+void arrayCallback(const std_msgs::Int32MultiArray::ConstPtr& array);
 
 class ImageConverter
 {
   ros::NodeHandle nh_;
   image_transport::ImageTransport it_;
-  image_transport::Subscriber image_sub_;
-  image_transport::Publisher image_pub_;
-  ros::Publisher image_state_pub;
+  image_transport::Subscriber image_sub_;  // this subscribes from realsense
+  image_transport::Publisher image_pub_;   // this publishes the image 
+  ros::Publisher image_state_pub;          // this publishes to the Julia node
+  ros::Subscriber julia_overlay_sub;          // this publishes to the Julia node
   ros::NodeHandle n;
+
 
 public:
   ImageConverter()
@@ -30,6 +33,7 @@ public:
     image_pub_ = it_.advertise("/multi_blob/blob_overlay", 1);
 
     image_state_pub = n.advertise<std_msgs::Int32MultiArray>("/multi_blob/blob_data", 100, true);
+    julia_overlay_sub = n.subscribe<std_msgs::Int32MultiArray>("/julia_brain/visual_out", 100, arrayCallback);
     cv::namedWindow(OPENCV_WINDOW);
   }
 
@@ -40,10 +44,12 @@ public:
 
   void imageCb(const sensor_msgs::ImageConstPtr& msg)
   {
-    cv_bridge::CvImagePtr cv_ptr;
+    cv_bridge::CvImagePtr multiblob_cv_ptr;
+    cv_bridge::CvImagePtr julia_cv_ptr;
     try
     {
-      cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+      multiblob_cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);  // this points to the image that will be modified by the multiblob node
+      julia_cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);      // this points to the image that we overlay with output from the julia brain
     }
     catch (cv_bridge::Exception& e)
     {
@@ -51,17 +57,35 @@ public:
       return;
     }
 
-    // Do custom image processing pipelines
-    multi_blob_track(cv_ptr, &image_state_pub);
+    // detect blobs from discs
+    multi_blob_track(multiblob_cv_ptr, &image_state_pub);
+
+    // overlay output from julia node onto display image
 
     // Update GUI Window
-    cv::imshow(OPENCV_WINDOW, cv_ptr->image);
+    //cv::imshow(OPENCV_WINDOW, multiblob_cv_ptr->image);  // uncomment this to see raw image feed from multiblob
+    cv::imshow(OPENCV_WINDOW, julia_cv_ptr->image);  // uncomment this to see raw image feed from multiblob
     cv::waitKey(3);
 
     // Output modified video stream
-    image_pub_.publish(cv_ptr->toImageMsg());
+    image_pub_.publish(multiblob_cv_ptr->toImageMsg());
   }
 };
+
+void arrayCallback(const std_msgs::Int32MultiArray::ConstPtr& array){
+/*  PUT VISUAL OUTPUT CODE HERE
+    int cnt = 0;
+    int Arr[5];
+    for(std::vector<int>::const_iterator it = array->data.begin(); it != array->data.end(); ++it)
+    {
+        if(i == 5){
+            
+        Arr[i] = *it;
+        i++;
+    }
+*/
+    return;
+}
 
 int main(int argc, char** argv)
 {
