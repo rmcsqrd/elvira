@@ -27,9 +27,9 @@ public:
     //image_sub_ = it_.subscribe("/camera/image_raw", 1,  // this is original
     image_sub_ = it_.subscribe("/camera/color/image_raw", 1, // this is for realsense
       &ImageConverter::imageCb, this);  // reference https://docs.ros.org/api/image_transport/html/classimage__transport_1_1ImageTransport.html#a1c847a2c719c874f84a78a6a60b98c7f
-    image_pub_ = it_.advertise("/image_converter/output_video", 1);
+    image_pub_ = it_.advertise("/multi_blob/blob_overlay", 1);
 
-    image_state_pub = n.advertise<std_msgs::Int32MultiArray>("/image_converter/julia_data", 100, true);
+    image_state_pub = n.advertise<std_msgs::Int32MultiArray>("/multi_blob/blob_data", 100, true);
     cv::namedWindow(OPENCV_WINDOW);
   }
 

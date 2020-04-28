@@ -17,7 +17,15 @@
 /*
 ELVIRA MULTI-BLOB NODE
 INPUT: pointer to image from realsense node
-RETURN: nothing, just updates the image from the realsense node
+RETURN: /multi_blob/blob_overlay/ - this modifies the image pointer and superimposes the blobs being detected.
+        /multi_blob/blob_data/ - 1x(5N) array of data where N is the number of blobs detected (each blob has 5 items in its portion of the array)
+        (icm, jcm, N, rad, status, ...[this repeats N times])
+        
+        All entries are ints
+        icm, jcm = blob centroid
+        N = number of pixels in blob
+        rad = blob radius
+        status = friendly (1) or adversarial (0)
 
 SUMMARY: This node loops through all pixels in an image frame to:
 - check if the pixel meets a color threshold (tolerance/colors in point_check())
@@ -73,6 +81,7 @@ void rosMsg::addVect(int icm, int jcm, int N, int rad, int status){
 void rosMsg::sendMsg(ros::Publisher * image_state_pub){
     
     // publish data
+    
     (*image_state_pub).publish(blobArray);
 
 }
