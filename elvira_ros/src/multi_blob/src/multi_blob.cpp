@@ -53,7 +53,7 @@ class rosMsg{
 // class that stores image data of blobs to send to julia
     public:
         void addVect(int icm, int jcm, int N, int rad, int status);
-        void sendMsg();
+        void sendMsg(ros::Publisher*);
 
     private:
         std_msgs::Int32MultiArray blobArray;
@@ -67,16 +67,13 @@ void rosMsg::addVect(int icm, int jcm, int N, int rad, int status){
     blobArray.data.push_back(rad);
     blobArray.data.push_back(status);
     
-    ROS_DEBUG_STREAM(rad);
+    //ROS_DEBUG_STREAM(blobArray); // display data output of blobarray
 }
 
-void rosMsg::sendMsg(){
+void rosMsg::sendMsg(ros::Publisher * image_state_pub){
     
     // publish data
-    ros::NodeHandle n;
-    ros::Publisher image_state_pub = n.advertise<std_msgs::Int32MultiArray>("/image_converter/julia_data", 1000);
-    image_state_pub.publish(blobArray);
-    ROS_INFO("I published something!");
+    (*image_state_pub).publish(blobArray);
 
 }
 
@@ -254,12 +251,14 @@ void drawBlobCircles(std::list<blob*> blobs, cv_bridge::CvImagePtr& cv_ptr, std:
     }
 }
 
-void multi_blob_track(cv_bridge::CvImagePtr&  cv_ptr){
+void multi_blob_track(cv_bridge::CvImagePtr&  cv_ptr, ros::Publisher * image_state_pub){
 
 // enable debugging messages
 if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) { // Change the level to fit your needs
    ros::console::notifyLoggerLevelsChanged();
 }
+    // initialize ros publisher
+
     // initialize empty list to store blob objects
     std::list<blob*> orange_blobs = {};
     std::list<blob*> yellow_blobs= {};
@@ -306,15 +305,15 @@ if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels
     std::string friendly = "Friendly Blob";
     std::string foe = "Adversarial Blob";
     
-    //rosMsg* juliaImgMsg;    
-    rosMsg* juliaImgMsg = new rosMsg;    
+    rosMsg* juliaImgMsg = new rosMsg;  // need to instantiate on heap to avoid stack overflow/segfault
+    //ros::Duration(0.1).sleep();
     
     drawBlobCircles(orange_blobs, cv_ptr, &foe, juliaImgMsg);
     drawBlobCircles(yellow_blobs, cv_ptr, &foe, juliaImgMsg);
     drawBlobCircles(purple_blobs, cv_ptr, &friendly, juliaImgMsg);
     drawBlobCircles(red_blobs, cv_ptr, &foe, juliaImgMsg);
     
-    juliaImgMsg->sendMsg(); 
+    juliaImgMsg->sendMsg(image_state_pub); 
 
 }
 

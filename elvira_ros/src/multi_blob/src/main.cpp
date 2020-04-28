@@ -7,7 +7,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include "multi_blob.hpp"
-
+#include "std_msgs/Int32MultiArray.h"
 static const std::string OPENCV_WINDOW = "Image window";
 
 class ImageConverter
@@ -16,6 +16,8 @@ class ImageConverter
   image_transport::ImageTransport it_;
   image_transport::Subscriber image_sub_;
   image_transport::Publisher image_pub_;
+  ros::Publisher image_state_pub;
+  ros::NodeHandle n;
 
 public:
   ImageConverter()
@@ -27,6 +29,7 @@ public:
       &ImageConverter::imageCb, this);  // reference https://docs.ros.org/api/image_transport/html/classimage__transport_1_1ImageTransport.html#a1c847a2c719c874f84a78a6a60b98c7f
     image_pub_ = it_.advertise("/image_converter/output_video", 1);
 
+    image_state_pub = n.advertise<std_msgs::Int32MultiArray>("/image_converter/julia_data", 100, true);
     cv::namedWindow(OPENCV_WINDOW);
   }
 
@@ -49,7 +52,7 @@ public:
     }
 
     // Do custom image processing pipelines
-    multi_blob_track(cv_ptr);
+    multi_blob_track(cv_ptr, &image_state_pub);
 
     // Update GUI Window
     cv::imshow(OPENCV_WINDOW, cv_ptr->image);
