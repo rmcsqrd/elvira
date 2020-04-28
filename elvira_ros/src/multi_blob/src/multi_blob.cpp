@@ -11,8 +11,9 @@
 #include <iostream>
 #include <ros/console.h>
 #include <algorithm>
-#include <string>
-
+#include <vector>
+#include "std_msgs/Int32MultiArray.h"
+#include <cstdint>
 /*
 ELVIRA MULTI-BLOB NODE
 INPUT: pointer to image from realsense node
@@ -26,10 +27,14 @@ SUMMARY: This node loops through all pixels in an image frame to:
 - clusters are then drawn by looping through lists of cluster color groups.
 
 CLASS DESCRIPTION:
+rosMsg(): container for all blobs to be transmitted to julia node
+    rosMsg.addVect(): add a vector of blob data from blob passing check in drawBlobCircles()
+    rosMsg.sendMsg(): amalgamate vectors and push vision data message to julia node
+
 blob(): individual cluster of pixels. Belongs to list of clusters grouped by color.
     blob.check_blob(): returns distance between blob centroid and pixel
     blob.draw_circle(): draws a circle based on blob radius and centroid.
-    blob.updat(): update blob parameters when a new pixel is added to the blob
+    blob.update(): update blob parameters when a new pixel is added to the blob
 
 FUNCTION DESCRIPTIONS:
 HSV_convert(): helper function that takes in RGB values and returns HSV values
@@ -38,15 +43,50 @@ new_blob(): function to instantiate new blob with a given point
 pixel_assignment(): function that iterates through existing blobs and determines minimum distance
                     between a given pixel and all blobs. Assigns pixel to nearest blob or creates
                     new blob if pixel doesn't pass threshold
-drawBlobCircles(): simple helper function that loops through blob lists and draws blob
+drawBlobCircles(): simple helper function that loops through blob lists and draws blob, also acts
+                   as conditional gatekeeper for rosMsg()
 multi_blob_track(): wrapper function that loops through image and calls all the other functions
 
 */
+
+class rosMsg{
+// class that stores image data of blobs to send to julia
+    public:
+        void addVect(int icm, int jcm, int N, int rad, int status);
+        void sendMsg();
+
+    private:
+        std_msgs::Int32MultiArray blobArray;
+};
+
+void rosMsg::addVect(int icm, int jcm, int N, int rad, int status){
+
+    blobArray.data.push_back(icm);
+    blobArray.data.push_back(jcm);
+    blobArray.data.push_back(N);
+    blobArray.data.push_back(rad);
+    blobArray.data.push_back(status);
+    
+    ROS_DEBUG_STREAM(rad);
+}
+
+void rosMsg::sendMsg(){
+    
+    // publish data
+    ros::NodeHandle n;
+    ros::Publisher image_state_pub = n.advertise<std_msgs::Int32MultiArray>("/image_converter/julia_data", 1000);
+    image_state_pub.publish(blobArray);
+    ROS_INFO("I published something!");
+
+}
 
 class blob{
 // blob class that stores blob centroid/radius information    
     public:
         int N;  // number of points in blob
+        int icm;  // i centroid
+        int jcm;  // j centroid
+        int rad;  // radius
         blob(int cent_j, int cent_i, int* blob_color){  // instantiate class with centroid/radius
             blob_blue = *(blob_color);
             blob_green = *(blob_color+1);
@@ -67,10 +107,6 @@ class blob{
         int i;  // sum of i points
         int j;  // sum of j points
 
-        int icm;  // i centroid
-        int jcm;  // j centroid
-        int rad;  // radius
-        
         int blob_blue; 
         int blob_green;
         int blob_red; 
@@ -199,11 +235,21 @@ void pixel_assignment(std::list<blob*> *blobs, int* j, int* i, int* color, int* 
     }
 }
 
-void drawBlobCircles(std::list<blob*> blobs, cv_bridge::CvImagePtr& cv_ptr, std::string * label){
+void drawBlobCircles(std::list<blob*> blobs, cv_bridge::CvImagePtr& cv_ptr, std::string * label, rosMsg * juliaImgMsg){
     typedef std::list<blob*>::iterator blobsit;
     for(blobsit k = blobs.begin(); k != blobs.end(); ++k){
         if((*k)->N > 1000){  // don't display small noisy bubbles
             (*k)->draw_circle(cv_ptr, label);
+
+            // send vector to rosMsg object
+            int status;  // 0 = friendly, 1 = adversarial
+            if(*label == "Friendly Blob"){
+                status = 0;
+            }else if(*label == "Adversarial Blob"){
+                status = 1;
+            }
+
+            juliaImgMsg->addVect((*k)->icm, (*k)->jcm, (*k)->N, (*k)->rad, status);
         }
     }
 }
@@ -260,9 +306,15 @@ if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels
     std::string friendly = "Friendly Blob";
     std::string foe = "Adversarial Blob";
     
-    drawBlobCircles(orange_blobs, cv_ptr, &foe);
-    drawBlobCircles(yellow_blobs, cv_ptr, &foe);
-    drawBlobCircles(purple_blobs, cv_ptr, &friendly);
-    drawBlobCircles(red_blobs, cv_ptr, &foe);
+    //rosMsg* juliaImgMsg;    
+    rosMsg* juliaImgMsg = new rosMsg;    
+    
+    drawBlobCircles(orange_blobs, cv_ptr, &foe, juliaImgMsg);
+    drawBlobCircles(yellow_blobs, cv_ptr, &foe, juliaImgMsg);
+    drawBlobCircles(purple_blobs, cv_ptr, &friendly, juliaImgMsg);
+    drawBlobCircles(red_blobs, cv_ptr, &foe, juliaImgMsg);
+    
+    juliaImgMsg->sendMsg(); 
+
 }
 
