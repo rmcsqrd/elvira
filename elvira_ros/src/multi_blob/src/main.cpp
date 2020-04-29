@@ -60,11 +60,15 @@ public:
     // detect blobs from discs
     multi_blob_track(multiblob_cv_ptr, &image_state_pub);
 
-    // overlay output from julia node onto display image
-
+    // add crosshair to both output forms
+    cv::drawMarker(multiblob_cv_ptr->image, cv::Point(320, 240), CV_RGB(255, 255, 255), cv::MARKER_CROSS, 40, 4);
+    cv::drawMarker(multiblob_cv_ptr->image, cv::Point(320, 240), CV_RGB(0, 0, 0), cv::MARKER_CROSS, 40, 2);
+    cv::drawMarker(julia_cv_ptr->image, cv::Point(320, 240), CV_RGB(255, 255, 255), cv::MARKER_CROSS, 40, 4);
+    cv::drawMarker(julia_cv_ptr->image, cv::Point(320, 240), CV_RGB(0, 0, 0), cv::MARKER_CROSS, 40, 2);
+    
     // Update GUI Window
-    //cv::imshow(OPENCV_WINDOW, multiblob_cv_ptr->image);  // uncomment this to see raw image feed from multiblob
-    cv::imshow(OPENCV_WINDOW, julia_cv_ptr->image);  // uncomment this to see raw image feed from multiblob
+    cv::imshow(OPENCV_WINDOW, multiblob_cv_ptr->image);  // uncomment this to see raw image feed from multiblob
+    //cv::imshow(OPENCV_WINDOW, julia_cv_ptr->image);  // uncomment this to see raw image feed from multiblob
     cv::waitKey(3);
 
     // Output modified video stream

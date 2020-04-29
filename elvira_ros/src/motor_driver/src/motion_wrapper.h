@@ -9,3 +9,4 @@ void getmiddle();
 void getshort();
 void rotateCW();
 void rotateCCW();
+void rotateCWtest();

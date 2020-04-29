@@ -58,7 +58,7 @@ void getmiddle();
 void getshort();
 void rotateCW();
 void rotateCCW();
-
+void rotateCWtest();
 
 // movement functions
 void stanceReset(){
@@ -113,64 +113,42 @@ void getshort(){
 
 void rotateCCW(){
 
-    leg4.articulate(180,180);
-    leg1.articulate(0, 0);
+    leg4.articulate(0,0);
     delay(100);
-    leg1.sweep(0);
-    leg4.sweep(180);
-    delay(100);
-    leg4.articulate(0, 0);
-    leg1.articulate(180,180);
-    delay(100);
-    
     leg2.sweep(180);
     leg3.sweep(0);
-    leg1.articulate(180,0);
+    delay(100);
+    leg2.articulate(180,180);
+    leg1.articulate(0,0);
     leg4.articulate(180,180);
     delay(100);
-
-    leg2.articulate(180, 180);
-    leg2.sweep(0);
-    leg3.articulate(0,0);
+    leg3.articulate(180,180);
     leg3.sweep(180);
+    leg1.articulate(180,180);
+    leg2.articulate(0,0);
     delay(100);
-    leg2.articulate(90,90);
-    leg3.articulate(90,90);
-    leg1.sweep(180);
-    leg4.sweep(0);
-    delay(100);
+    leg2.sweep(0);
     stanceReset();
+
 }
 
 void rotateCW(){
-
-    leg2.articulate(180,180);
-    leg3.articulate(0, 0);
-    delay(100);
-    leg3.sweep(0);
-    leg2.sweep(180);
-    delay(100);
-    leg2.articulate(0, 0);
+    
     leg3.articulate(180,180);
     delay(100);
-    
     leg4.sweep(180);
     leg1.sweep(0);
+    delay(100);
     leg3.articulate(0,0);
-    leg2.articulate(180,180);
     delay(100);
-    leg2.articulate(180,180);  // this here because movement issues
-    leg4.articulate(180, 180);
-    delay(50);
-    leg4.sweep(0);
     leg1.articulate(0,0);
-    leg1.sweep(180);
     delay(100);
-    leg2.articulate(0,0);
-    leg4.articulate(90,90);
-    leg1.articulate(90,90);
-    leg3.sweep(180);
-    leg2.sweep(0);
+    leg4.sweep(0);
+    delay(100);
+    leg1.articulate(180,180);
+    leg4.articulate(0,0);
+    delay(100);
+    leg1.sweep(180);
     delay(100);
     stanceReset();
 }
@@ -180,3 +158,27 @@ void delay(uint16_t time){
     usleep(time * 1e3);
 }
 
+
+
+void rotateCWtest(){
+    delay(100);
+    leg3.articulate(180,180);
+    leg1.sweep(0); 
+    delay(100);
+    leg3.sweep(0);
+    delay(100);
+    leg3.articulate(0,0);
+    delay(100);
+    leg4.articulate(0,0);
+    delay(100);
+    leg3.sweep(180);
+    leg2.sweep(180);
+    delay(100);
+    leg3.articulate(180,180);
+    delay(100);
+    leg2.sweep(0);
+    delay(50000);
+
+
+
+}

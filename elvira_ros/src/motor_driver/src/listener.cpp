@@ -17,13 +17,24 @@ void motorDriverCallback(const std_msgs::String::ConstPtr& msg)
     }
 }
 
+
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "listener");
-  ros::NodeHandle n;
-  ros::Subscriber sub = n.subscribe("motor_control", 10, motorDriverCallback);
+  //ros::init(argc, argv, "listener");
+  //ros::NodeHandle n;
+  //ros::Subscriber sub = n.subscribe("motor_control", 10, motorDriverCallback);
 
-  ros::spin();
+  //ros::spin();
+   
+    stanceReset();
+    delay(1000);
+    rotateCWtest();
+    //rotateCW();
+    //delay(1000);
+    //rotateCCW();
 
   return 0;
 }
+
+
+
