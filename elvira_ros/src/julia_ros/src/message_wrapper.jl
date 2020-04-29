@@ -23,7 +23,6 @@ function callback(msg::Int32MultiArray, motor_pub_obj::Publisher{StringMsg}, vis
     num_blobs = convert(Int, size(blobVect)[1]/5)
     blobArray = transpose(reshape(blobVect, :, num_blobs))
     
-    
     raw_string = juliaBrain(blobArray, "scaredy_cat", Q1_mat, Q2_mat)
     text = StringMsg(raw_string)
     publish(motor_pub_obj, text)
