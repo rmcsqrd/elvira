@@ -40,8 +40,6 @@ function loop()
 end
 
 function main()
-    cacheclr = 1
-    serialize("cacheclr_flag", cacheclr)  # this forces overwrite of stored Q matrix between runs`
 
     init_node("julia_node")
 
