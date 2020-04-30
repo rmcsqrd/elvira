@@ -25,11 +25,8 @@ function callback(msg::Int32MultiArray, motor_pub_obj::Publisher{StringMsg}, vis
     
     raw_string = juliaBrain(blobArray, "scaredy_cat", Q1_mat, Q2_mat, actions, γ, α, ϵ, A, S)
     text = StringMsg(raw_string)
-    println("here1")
     publish(motor_pub_obj, text)
-    println("here2")
     publish(visual_pub_obj, msg)
-    println("here3")
 
 end
 
@@ -38,32 +35,46 @@ function loop()
     loop_rate = Rate(1.0)
     while ! is_shutdown()
         rossleep(loop_rate)
+        println("should just stay here")
+        spin()
     end
 end
 
 
 
 function main()
-    
+    try
+        rm(string(@__DIR__, "/lib/S"))
+        rm(string(@__DIR__, "/lib/A"))
+    catch
+    end
     init_node("julia_node")
 
     actions = ["CW", "CCW", "noRotate"]
     
     A = "noRotate"
-
     # initalize state space stuff
     Q1_mat = Qinit(actions)
     Q2_mat = deepcopy(Q1_mat)
     S = ones(length(size(Q1_mat))-1)
     S = convert.(Int, S)
+    serialize(string(@__DIR__, "/lib/S"), S)
+    serialize(string(@__DIR__, "/lib/A"), A)
+
+
+   
+
     γ = 0.99
     α = 0.5
     ϵ = 0.1
     
     motor_pub = Publisher{StringMsg}("/julia_brain/motor_control", queue_size=10);
     visual_pub = Publisher{Int32MultiArray}("/julia_brain/visual_out", queue_size=10);
-    sub = Subscriber{Int32MultiArray}("/multi_blob/blob_data", callback, (motor_pub, visual_pub,Q1_mat, Q2_mat, actions, γ, α, ϵ, A, S, ), queue_size=10)
+    println("gets here")
+    sub = Subscriber{Int32MultiArray}("/multi_blob/blob_data", callback, (motor_pub, visual_pub,Q1_mat, Q2_mat, actions, γ, α, ϵ, deserialize(string(@__DIR__, "/lib/A")), deserialize(string(@__DIR__, "/lib/S")), ), queue_size=10)
+    println("gets here 2")
     loop()
+    
 end
 
 if ! isinteractive()

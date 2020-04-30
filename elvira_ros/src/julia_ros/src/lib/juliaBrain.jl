@@ -1,14 +1,20 @@
 using RobotOS
+using Serialization
 
 # function that unpacks blob and places into an array
 function juliaBrain(blobArray, experiment_type, Q1_mat, Q2_mat, actions, γ, α, ϵ, A, S)
-    
+    println("blobArray = $blobArray") 
+    println("experiment_type = $experiment_type")
+    println("actions = $actions")
+    #A = deserialize("A")
+    #S = deserialize("S")
+    println("doesnt get's here")
+
     # process geometry data for bin percentages for current state
     n_bins = length(size(Q1_mat))-1
-    
     # figure out state from previous action and observe reward
     Sp = stateGen(blobArray, n_bins) # returns something like [0.0, 0.1, ...]
-    Sp = convert.(Int, S.*10)  # convert to state space indices
+    Sp = convert.(Int, Sp.*10)  # convert to state space indices
     Sp .+= 1  # julia indexes from 1 :)
     reward = rewardGen(Sp)
     
@@ -17,17 +23,18 @@ function juliaBrain(blobArray, experiment_type, Q1_mat, Q2_mat, actions, γ, α,
     action_string = actions[Ap]
 
     # display stuff
-    println("action command: $action_string")
     println("state space: $Sp")
     println("reward: $reward")
+    println("action command: $action_string")
     println("\n")
     
     # select Q matrix
+    
     Q1_mat = updateQ(Q1_mat, Sp, Ap, γ, α, actions, reward, S, A)
     
     # reassign A, S variables
-    S = Sp
-    A = Ap
+    serialize("S", Sp[1:n_bins])
+    serialize("A", actions[Ap])
 
     # take action
     return action_string 
