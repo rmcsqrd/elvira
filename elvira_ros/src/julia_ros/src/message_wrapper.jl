@@ -16,12 +16,14 @@ import .std_msgs.msg.StringMsg
 import .std_msgs.msg.Int32MultiArray
 
 # multi_blob subscribe/publish
-function callback(msg::Int32MultiArray, motor_pub_obj::Publisher{StringMsg}, visual_pub_obj::Publisher{Int32MultiArray}, Q1_mat, Q2_mat, actions, γ, α, ϵ, A, S)
+function callback(msg::Int32MultiArray, motor_pub_obj::Publisher{StringMsg}, visual_pub_obj::Publisher{Int32MultiArray}, Q1_mat, Q2_mat, actions, γ, α, ϵ)
 
     # unpack and convert data to an array
     blobVect = msg.data  
     num_blobs = convert(Int, size(blobVect)[1]/5)
     blobArray = transpose(reshape(blobVect, :, num_blobs))
+    A = deserialize(string(@__DIR__, "/lib/A"))
+    S = deserialize(string(@__DIR__, "/lib/S"))
     
     raw_string = juliaBrain(blobArray, "scaredy_cat", Q1_mat, Q2_mat, actions, γ, α, ϵ, A, S)
     text = StringMsg(raw_string)
@@ -70,10 +72,15 @@ function main()
     
     motor_pub = Publisher{StringMsg}("/julia_brain/motor_control", queue_size=10);
     visual_pub = Publisher{Int32MultiArray}("/julia_brain/visual_out", queue_size=10);
-    println("gets here")
-    sub = Subscriber{Int32MultiArray}("/multi_blob/blob_data", callback, (motor_pub, visual_pub,Q1_mat, Q2_mat, actions, γ, α, ϵ, deserialize(string(@__DIR__, "/lib/A")), deserialize(string(@__DIR__, "/lib/S")), ), queue_size=10)
-    println("gets here 2")
-    loop()
+    sub = Subscriber{Int32MultiArray}("/multi_blob/blob_data", callback, (motor_pub, visual_pub,Q1_mat, Q2_mat, actions, γ, α, ϵ, ), queue_size=10)
+    #loop()
+    while ! is_shutdown()
+        println("\nHELLO MA\n")
+        println(is_shutdown())
+        #spin()
+        rossleep(1.0)
+    end
+        
     
 end
 
