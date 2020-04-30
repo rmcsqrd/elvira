@@ -3,12 +3,6 @@ using Serialization
 
 # function that unpacks blob and places into an array
 function juliaBrain(blobArray, experiment_type, Q1_mat, Q2_mat, actions, γ, α, ϵ, A, S)
-    println("blobArray = $blobArray") 
-    println("experiment_type = $experiment_type")
-    println("actions = $actions")
-    #A = deserialize("A")
-    #S = deserialize("S")
-    println("doesnt get's here")
 
     # process geometry data for bin percentages for current state
     n_bins = length(size(Q1_mat))-1

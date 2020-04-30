@@ -29,19 +29,9 @@ function callback(msg::Int32MultiArray, motor_pub_obj::Publisher{StringMsg}, vis
     text = StringMsg(raw_string)
     publish(motor_pub_obj, text)
     publish(visual_pub_obj, msg)
+        rossleep(1.0)
 
 end
-
-# node loop function 
-function loop()
-    loop_rate = Rate(1.0)
-    while ! is_shutdown()
-        rossleep(loop_rate)
-        println("should just stay here")
-        spin()
-    end
-end
-
 
 
 function main()
@@ -75,9 +65,7 @@ function main()
     sub = Subscriber{Int32MultiArray}("/multi_blob/blob_data", callback, (motor_pub, visual_pub,Q1_mat, Q2_mat, actions, γ, α, ϵ, ), queue_size=10)
     #loop()
     while ! is_shutdown()
-        println("\nHELLO MA\n")
-        println(is_shutdown())
-        #spin()
+        spin()
         rossleep(1.0)
     end
         
