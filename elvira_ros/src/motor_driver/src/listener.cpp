@@ -14,21 +14,26 @@ void motorDriverCallback(const std_msgs::String::ConstPtr& msg)
     if(msg->data == "pushup"){
     ROS_DEBUG_STREAM(msg->data.c_str()); 
         sayHello(1);
+    }else if(msg->data == "CCW"){
+        rotateCCW();
+    }else if(msg->data == "CW"){
+        rotateCW();
+    }else{
     }
 }
 
 
 int main(int argc, char **argv)
 {
-  //ros::init(argc, argv, "listener");
-  //ros::NodeHandle n;
-  //ros::Subscriber sub = n.subscribe("motor_control", 10, motorDriverCallback);
+  ros::init(argc, argv, "listener");
+  ros::NodeHandle n;
+  ros::Subscriber sub = n.subscribe("/julia_brain/motor_control", 10, motorDriverCallback);
 
-  //ros::spin();
+  ros::spin();
    
-    stanceReset();
-    delay(1000);
-    rotateCWtest();
+    //stanceReset();
+    //delay(1000);
+    //rotateCWtest();
     //rotateCW();
     //delay(1000);
     //rotateCCW();

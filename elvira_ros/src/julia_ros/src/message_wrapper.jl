@@ -16,20 +16,25 @@ import .std_msgs.msg.StringMsg
 import .std_msgs.msg.Int32MultiArray
 
 # multi_blob subscribe/publish
-function callback(msg::Int32MultiArray, motor_pub_obj::Publisher{StringMsg}, visual_pub_obj::Publisher{Int32MultiArray}, Q1_mat, Q2_mat, actions, γ, α, ϵ)
+function callback(msg::Int32MultiArray, motor_pub_obj::Publisher{StringMsg}, visual_pub_obj::Publisher{Int32MultiArray}, Q1_mat, Q2_mat, actions, γ, α, ϵ, sleep_rate)
 
     # unpack and convert data to an array
     blobVect = msg.data  
     num_blobs = convert(Int, size(blobVect)[1]/5)
-    blobArray = transpose(reshape(blobVect, :, num_blobs))
-    A = deserialize(string(@__DIR__, "/lib/A"))
-    S = deserialize(string(@__DIR__, "/lib/S"))
     
-    raw_string = juliaBrain(blobArray, "scaredy_cat", Q1_mat, Q2_mat, actions, γ, α, ϵ, A, S)
+    if num_blobs == 0  # handle case where no blobs by passing dummy data
+        blobVect = [0, 0, 0, 0, 0] 
+        num_blobs = 1
+    end
+        A = deserialize(string(@__DIR__, "/lib/A"))
+        S = deserialize(string(@__DIR__, "/lib/S"))
+        blobArray = transpose(reshape(blobVect, :, num_blobs))
+        raw_string = juliaBrain(blobArray, "scaredy_cat", Q1_mat, Q2_mat, actions, γ, α, ϵ, A, S)
+    
     text = StringMsg(raw_string)
     publish(motor_pub_obj, text)
     publish(visual_pub_obj, msg)
-        rossleep(1.0)
+    #rossleep(sleep_rate)
 
 end
 
@@ -53,20 +58,18 @@ function main()
     serialize(string(@__DIR__, "/lib/S"), S)
     serialize(string(@__DIR__, "/lib/A"), A)
 
-
-   
-
     γ = 0.99
     α = 0.5
     ϵ = 0.1
+    sleep_rate = 0.0
     
-    motor_pub = Publisher{StringMsg}("/julia_brain/motor_control", queue_size=10);
-    visual_pub = Publisher{Int32MultiArray}("/julia_brain/visual_out", queue_size=10);
-    sub = Subscriber{Int32MultiArray}("/multi_blob/blob_data", callback, (motor_pub, visual_pub,Q1_mat, Q2_mat, actions, γ, α, ϵ, ), queue_size=10)
-    #loop()
+    motor_pub = Publisher{StringMsg}("/julia_brain/motor_control", queue_size=1);
+    visual_pub = Publisher{Int32MultiArray}("/julia_brain/visual_out", queue_size=1);
+    #sub = Subscriber{Int32MultiArray}("/multi_blob/blob_data", callback, (motor_pub, visual_pub,Q1_mat, Q2_mat, actions, γ, α, ϵ, sleep_rate, ), queue_size=1)
+    sub = Subscriber{Int32MultiArray}("/multi_blob/blob_data", callback, (motor_pub, visual_pub,Q1_mat, Q2_mat, actions, γ, α, ϵ, sleep_rate, ))
     while ! is_shutdown()
         spin()
-        rossleep(1.0)
+        rossleep(sleep_rate)
     end
         
     

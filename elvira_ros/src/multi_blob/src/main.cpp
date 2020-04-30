@@ -32,8 +32,9 @@ public:
       &ImageConverter::imageCb, this);  // reference https://docs.ros.org/api/image_transport/html/classimage__transport_1_1ImageTransport.html#a1c847a2c719c874f84a78a6a60b98c7f
     image_pub_ = it_.advertise("/multi_blob/blob_overlay", 1);
 
-    image_state_pub = n.advertise<std_msgs::Int32MultiArray>("/multi_blob/blob_data", 100, true);
-    julia_overlay_sub = n.subscribe<std_msgs::Int32MultiArray>("/julia_brain/visual_out", 100, arrayCallback);
+    //image_state_pub = n.advertise<std_msgs::Int32MultiArray>("/multi_blob/blob_data", 1, true);
+    image_state_pub = n.advertise<std_msgs::Int32MultiArray>("/multi_blob/blob_data", 1);
+    julia_overlay_sub = n.subscribe<std_msgs::Int32MultiArray>("/julia_brain/visual_out", 1, arrayCallback);
     cv::namedWindow(OPENCV_WINDOW);
   }
 
@@ -73,6 +74,7 @@ public:
 
     // Output modified video stream
     image_pub_.publish(multiblob_cv_ptr->toImageMsg());
+  ros::Duration(3.0).sleep();
   }
 };
 

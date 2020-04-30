@@ -6,18 +6,20 @@ function juliaBrain(blobArray, experiment_type, Q1_mat, Q2_mat, actions, γ, α,
 
     # process geometry data for bin percentages for current state
     n_bins = length(size(Q1_mat))-1
-    # figure out state from previous action and observe reward
-    Sp = stateGen(blobArray, n_bins) # returns something like [0.0, 0.1, ...]
-    Sp = convert.(Int, Sp.*10)  # convert to state space indices
+    # figure out state from previous action and observe reward. Also choose action
+    Sp_unmod = stateGen(blobArray, n_bins) # returns something like [0.0, 0.1, ...]
+    println("state space: $Sp_unmod")
+    Sp = convert.(Int, Sp_unmod.*10)  # convert to state space indices
     Sp .+= 1  # julia indexes from 1 :)
-    reward = rewardGen(Sp)
     
     # choose action
     Ap = actionGen(Sp, Q1_mat, actions, ϵ)
     action_string = actions[Ap]
-
+    
+    # determine reward
+    reward = rewardGen(Sp_unmod, action_string)
+    
     # display stuff
-    println("state space: $Sp")
     println("reward: $reward")
     println("action command: $action_string")
     println("\n")
@@ -38,8 +40,8 @@ function Qinit(A)
     # setup S, A, T, γ, R tuple
     # blobArray is Nx5, where N = number of blobs.
     # [icm, jcm, N, rad, status]
-    n_bins = 5 # vertical image partition bins
-    dimsize = 11 # [0.0, 0.1, 0.2, ...,0.9, 1.0]
+    n_bins = 3 # vertical image partition bins
+    dimsize = 3 # [0.0, 0.1, 0.2, ...,0.9, 1.0]
    
     
     # this is ugly but takes n_bins and appends action space
@@ -93,7 +95,7 @@ function stateGen(blobArray, n_bins)
     return resultDist
 end
 
-function rewardGen(S)
+function rewardGen(S, action)
     statesize = size(S)[1]
     lowerthird = convert(Int, floor(statesize*0.33))
     upperthird = convert(Int, ceil(statesize*0.66))
@@ -102,6 +104,10 @@ function rewardGen(S)
         if S[i] > 0
             reward -= 10
         end
+    end
+    
+    if action != "noRotate"
+        reward -= 1
     end
     return reward
 end
