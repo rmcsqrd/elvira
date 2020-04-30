@@ -1,24 +1,45 @@
 using RobotOS
 
 # function that unpacks blob and places into an array
-function juliaBrain(blobArray, experiment_type, Q1_mat, Q2_mat)
+function juliaBrain(blobArray, experiment_type, Q1_mat, Q2_mat, actions, γ, α, ϵ, A, S)
     
     # process geometry data for bin percentages for current state
     n_bins = length(size(Q1_mat))-1
-    S = binDistributions(blobArray, n_bins)
-    return "dummy_string"
+    
+    # figure out state from previous action and observe reward
+    Sp = stateGen(blobArray, n_bins) # returns something like [0.0, 0.1, ...]
+    Sp = convert.(Int, S.*10)  # convert to state space indices
+    Sp .+= 1  # julia indexes from 1 :)
+    reward = rewardGen(Sp)
+    
+    # choose action
+    Ap = actionGen(Sp, Q1_mat, actions, ϵ)
+    action_string = actions[Ap]
+
+    # display stuff
+    println("action command: $action_string")
+    println("state space: $Sp")
+    println("reward: $reward")
+    println("\n")
+    
+    # select Q matrix
+    Q1_mat = updateQ(Q1_mat, Sp, Ap, γ, α, actions, reward, S, A)
+    
+    # reassign A, S variables
+    S = Sp
+    A = Ap
+
+    # take action
+    return action_string 
 end
 
-function Qinit()
+function Qinit(A)
     # setup S, A, T, γ, R tuple
     # blobArray is Nx5, where N = number of blobs.
     # [icm, jcm, N, rad, status]
     n_bins = 5 # vertical image partition bins
-    dimsize = 10
+    dimsize = 11 # [0.0, 0.1, 0.2, ...,0.9, 1.0]
    
-    A = ["CW", "CCW", "noRotate"]
-    T = 1.0
-    γ = 0.99
     
     # this is ugly but takes n_bins and appends action space
     matdims = Tuple(if x == n_bins+1 size(A)[1] else dimsize end for x in 1:n_bins+1)  
@@ -28,7 +49,7 @@ function Qinit()
     return Q1_mat
 end
 
-function binDistributions(blobArray, n_bins)
+function stateGen(blobArray, n_bins)
     
     # define geometries
     blobArray = transpose(blobArray)
@@ -57,32 +78,56 @@ function binDistributions(blobArray, n_bins)
 
         for i in 1:size(resultDist)[1]
             bin_i += bin_width                
-            #println("bin_i = $bin_i")
-            #println("bin_width = $bin_width")
-            #println("wp = $wp")
-            #println("hp = $hp")
-            #println("wmin = $wmin")
-            #println("wmax = $wmax")
             if bin_i > wmin && (bin_i - bin_width) < wmin
-                #println("cond 1")
                 resultDist[i] += (bin_i-wmin)*hp/(h*bin_width)
             elseif bin_i > wmin && (bin_i - bin_width) > wmin && (bin_i-bin_width) < wmax
-                #println("cond 2")
                 resultDist[i] += bin_width*hp/(h*bin_width)
             elseif bin_i > wmax && (bin_i - bin_width) < wmax
-                #println("cond 3")
                 resultDist[i] += (wmax-(bin_i-bin_width))*hp/(h*bin_width) 
             end
         end        
     end
 
     resultDist = round.(resultDist, digits=1)
-    println("\n $resultDist \n")
-
     return resultDist
 end
 
+function rewardGen(S)
+    statesize = size(S)[1]
+    lowerthird = convert(Int, floor(statesize*0.33))
+    upperthird = convert(Int, ceil(statesize*0.66))
+    reward = 0
+    for i in lowerthird+1:upperthird
+        if S[i] > 0
+            reward -= 10
+        end
+    end
+    return reward
+end
 
+function actionGen(Sp,  Q1_mat, actions, ϵ)
+    Sp = CartesianIndex(Tuple(vec(Sp)))
+    
+    # use ϵ-greedy to determine Q
+    if rand(1:100) > ϵ*100
+        if sum(Q1_mat[Sp, :]) == 0.0  # check if array empty, if yes do random
+            Ap = rand(1:size(actions)[1])
+        else
+            Ap = findmax(Q1_mat[Sp, :])[2]  # returns (val, index)
+        end
+    else
+        Ap = rand(1:size(actions)[1])
+    end
+    
+end
 
-
+function updateQ(Q1_mat, Sp, Ap, γ, α, actions, reward, S, A)
+    Ap_index = Ap 
+    A_index = findall(x->x==A, actions)[1]
+    QSpAp = CartesianIndex(Tuple(push!(vec(Sp), Ap_index)))
+    QSA = CartesianIndex(Tuple(push!(vec(S), A_index)))
+    Q1_mat[QSA]  += α*(reward+γ*Q1_mat[QSpAp]-Q1_mat[QSA])
+    return Q1_mat
+    
+end
 
