@@ -2,22 +2,19 @@ using RobotOS
 using Serialization
 
 # function that unpacks blob and places into an array
-function juliaBrain(blobArray, experiment_type, Q1_mat, Q2_mat, actions, γ, α, ϵ, A, S)
+function juliaBrain(blobArray, experiment_type, Q1_mat, Q2_mat, actions, γ, α, ϵ, A, S, n_bins, dimsize)
 
-    # process geometry data for bin percentages for current state
-    n_bins = length(size(Q1_mat))-1
     # figure out state from previous action and observe reward. Also choose action
-    Sp_unmod = stateGen(blobArray, n_bins) # returns something like [0.0, 0.1, ...]
+    Sp_unmod = stateGen(blobArray, n_bins, dimsize) # returns something like [0.0, 0.1, ...]
     println("state space: $Sp_unmod")
-    Sp = convert.(Int, Sp_unmod.*10)  # convert to state space indices
-    Sp .+= 1  # julia indexes from 1 :)
+    Sp = binAssign(Sp_unmod, dimsize)
     
     # choose action
     Ap = actionGen(Sp, Q1_mat, actions, ϵ)
     action_string = actions[Ap]
     
     # determine reward
-    reward = rewardGen(Sp_unmod, action_string)
+    reward = rewardGen(Sp_unmod, action_string, dimsize)
     
     # display stuff
     println("reward: $reward")
@@ -36,12 +33,10 @@ function juliaBrain(blobArray, experiment_type, Q1_mat, Q2_mat, actions, γ, α,
     return action_string 
 end
 
-function Qinit(A)
+function Qinit(A, n_bins, dimsize)
     # setup S, A, T, γ, R tuple
     # blobArray is Nx5, where N = number of blobs.
     # [icm, jcm, N, rad, status]
-    n_bins = 3 # vertical image partition bins
-    dimsize = 3 # [0.0, 0.1, 0.2, ...,0.9, 1.0]
    
     
     # this is ugly but takes n_bins and appends action space
@@ -52,7 +47,7 @@ function Qinit(A)
     return Q1_mat
 end
 
-function stateGen(blobArray, n_bins)
+function stateGen(blobArray, n_bins, dimsize)
     
     # define geometries
     blobArray = transpose(blobArray)
@@ -95,13 +90,13 @@ function stateGen(blobArray, n_bins)
     return resultDist
 end
 
-function rewardGen(S, action)
+function rewardGen(S, action, dimsize)
     statesize = size(S)[1]
     lowerthird = convert(Int, floor(statesize*0.33))
     upperthird = convert(Int, ceil(statesize*0.66))
     reward = 0
     for i in lowerthird+1:upperthird
-        if S[i] > 0
+        if S[i] > 1/dimsize
             reward -= 10
         end
     end
@@ -137,4 +132,26 @@ function updateQ(Q1_mat, Sp, Ap, γ, α, actions, reward, S, A)
     return Q1_mat
     
 end
+
+function binAssign(array, dimsize)
+# just a quick and dirty helper function to group bins
+           result = []
+           for item in array
+               inc = 1/dimsize
+               i = 0
+               while item >= i*inc && item <= 1
+                   if item == 1
+                       i = inc^-1
+                       break
+                   elseif item == 0.0
+                       i = 1
+                       break
+                   else
+                       i+=1
+                   end
+               end
+           push!(result, i)
+           end
+       return convert.(Int, result)
+       end
 

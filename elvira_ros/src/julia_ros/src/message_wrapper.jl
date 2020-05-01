@@ -16,7 +16,7 @@ import .std_msgs.msg.StringMsg
 import .std_msgs.msg.Int32MultiArray
 
 # multi_blob subscribe/publish
-function callback(msg::Int32MultiArray, motor_pub_obj::Publisher{StringMsg}, visual_pub_obj::Publisher{Int32MultiArray}, Q1_mat, Q2_mat, actions, γ, α, ϵ, sleep_rate)
+function callback(msg::Int32MultiArray, motor_pub_obj::Publisher{StringMsg}, visual_pub_obj::Publisher{Int32MultiArray}, Q1_mat, Q2_mat, actions, γ, α, ϵ, sleep_rate, n_bins, dimsize)
 
     # unpack and convert data to an array
     blobVect = msg.data  
@@ -29,7 +29,7 @@ function callback(msg::Int32MultiArray, motor_pub_obj::Publisher{StringMsg}, vis
         A = deserialize(string(@__DIR__, "/lib/A"))
         S = deserialize(string(@__DIR__, "/lib/S"))
         blobArray = transpose(reshape(blobVect, :, num_blobs))
-        raw_string = juliaBrain(blobArray, "scaredy_cat", Q1_mat, Q2_mat, actions, γ, α, ϵ, A, S)
+        raw_string = juliaBrain(blobArray, "scaredy_cat", Q1_mat, Q2_mat, actions, γ, α, ϵ, A, S, n_bins, dimsize)
     
     text = StringMsg(raw_string)
     publish(motor_pub_obj, text)
@@ -48,10 +48,12 @@ function main()
     init_node("julia_node")
 
     actions = ["CW", "CCW", "noRotate"]
+    n_bins = 3 # vertical image partition bins
+    dimsize = 3 # [0.0, 0.1, 0.2, ...,0.9, 1.0]
     
     A = "noRotate"
     # initalize state space stuff
-    Q1_mat = Qinit(actions)
+    Q1_mat = Qinit(actions, n_bins, dimsize)
     Q2_mat = deepcopy(Q1_mat)
     S = ones(length(size(Q1_mat))-1)
     S = convert.(Int, S)
@@ -66,7 +68,7 @@ function main()
     motor_pub = Publisher{StringMsg}("/julia_brain/motor_control", queue_size=1);
     visual_pub = Publisher{Int32MultiArray}("/julia_brain/visual_out", queue_size=1);
     #sub = Subscriber{Int32MultiArray}("/multi_blob/blob_data", callback, (motor_pub, visual_pub,Q1_mat, Q2_mat, actions, γ, α, ϵ, sleep_rate, ), queue_size=1)
-    sub = Subscriber{Int32MultiArray}("/multi_blob/blob_data", callback, (motor_pub, visual_pub,Q1_mat, Q2_mat, actions, γ, α, ϵ, sleep_rate, ))
+    sub = Subscriber{Int32MultiArray}("/multi_blob/blob_data", callback, (motor_pub, visual_pub,Q1_mat, Q2_mat, actions, γ, α, ϵ, sleep_rate, n_bins, dimsize, ))
     while ! is_shutdown()
         spin()
         rossleep(sleep_rate)
