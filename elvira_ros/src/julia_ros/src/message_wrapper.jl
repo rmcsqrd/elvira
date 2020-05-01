@@ -43,6 +43,7 @@ function main()
     try
         rm(string(@__DIR__, "/lib/S"))
         rm(string(@__DIR__, "/lib/A"))
+        rm(string(@__DIR__, "/lib/plotinfo"))
     catch
     end
     init_node("julia_node")
@@ -59,6 +60,9 @@ function main()
     S = convert.(Int, S)
     serialize(string(@__DIR__, "/lib/S"), S)
     serialize(string(@__DIR__, "/lib/A"), A)
+    
+    plotinfo = []
+    serialize(string(@__DIR__, "/lib/plotinfo"), plotinfo)
 
     γ = 0.99
     α = 0.5

@@ -8,13 +8,14 @@ function juliaBrain(blobArray, experiment_type, Q1_mat, Q2_mat, actions, γ, α,
     Sp_unmod = stateGen(blobArray, n_bins, dimsize) # returns something like [0.0, 0.1, ...]
     println("state space: $Sp_unmod")
     Sp = binAssign(Sp_unmod, dimsize)
-    
-    # choose action
+    #1 choose action
     Ap = actionGen(Sp, Q1_mat, actions, ϵ)
     action_string = actions[Ap]
     
     # determine reward
-    reward = rewardGen(Sp_unmod, action_string, dimsize)
+    S = deserialize(string(@__DIR__, "/S"))
+    A = deserialize(string(@__DIR__, "/A"))
+    reward = rewardGen(Sp_unmod, A, dimsize)
     
     # display stuff
     println("reward: $reward")
@@ -22,12 +23,15 @@ function juliaBrain(blobArray, experiment_type, Q1_mat, Q2_mat, actions, γ, α,
     println("\n")
     
     # select Q matrix
-    
+    plotinfo = deserialize(string(@__DIR__, "/plotinfo"))
     Q1_mat = updateQ(Q1_mat, Sp, Ap, γ, α, actions, reward, S, A)
     
     # reassign A, S variables
-    serialize("S", Sp[1:n_bins])
-    serialize("A", actions[Ap])
+    serialize(string(@__DIR__, "/S"), Sp[1:n_bins])
+    serialize(string(@__DIR__, "/A"), actions[Ap])
+    print(size(Q1_mat))
+    push!(plotinfo, [reward, Ap, sum(Q1_mat[:,:,:,1]), sum(Q1_mat[:,:,:,2]), sum(Q1_mat[:,:,:,3])])
+    serialize(string(@__DIR__, "/plotinfo"), plotinfo) 
 
     # take action
     return action_string 
@@ -97,13 +101,18 @@ function rewardGen(S, action, dimsize)
     reward = 0
     for i in lowerthird+1:upperthird
         if S[i] > 1/dimsize
-            reward -= 10
+            reward -= 100
         end
     end
-    
-    if action != "noRotate"
-        reward -= 1
+    if action != "noRotate" && reward < 0
+        reward -= 20
+    elseif action != "noRotate"
+        reward -= 10
+   
+    elseif reward == 0 && action == "noRotate"
+        reward += 20
     end
+    
     return reward
 end
 
@@ -127,8 +136,10 @@ function updateQ(Q1_mat, Sp, Ap, γ, α, actions, reward, S, A)
     A_index = findall(x->x==A, actions)[1]
     QSpAp = CartesianIndex(Tuple(push!(vec(Sp), Ap_index)))
     QSA = CartesianIndex(Tuple(push!(vec(S), A_index)))
+    println("QSpAp = $QSpAp")
+    println("QSA = $QSA")
     Q1_mat[QSA]  += α*(reward+γ*Q1_mat[QSpAp]-Q1_mat[QSA])
-    #loginfo(Q1_mat)
+    loginfo(Q1_mat)
     return Q1_mat
     
 end
