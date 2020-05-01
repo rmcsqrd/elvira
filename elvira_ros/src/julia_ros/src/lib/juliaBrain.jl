@@ -125,7 +125,6 @@ function actionGen(Sp,  Q1_mat, actions, ϵ)
     else
         Ap = rand(1:size(actions)[1])
     end
-    
 end
 
 function updateQ(Q1_mat, Sp, Ap, γ, α, actions, reward, S, A)
@@ -134,6 +133,7 @@ function updateQ(Q1_mat, Sp, Ap, γ, α, actions, reward, S, A)
     QSpAp = CartesianIndex(Tuple(push!(vec(Sp), Ap_index)))
     QSA = CartesianIndex(Tuple(push!(vec(S), A_index)))
     Q1_mat[QSA]  += α*(reward+γ*Q1_mat[QSpAp]-Q1_mat[QSA])
+    #loginfo(Q1_mat)
     return Q1_mat
     
 end
